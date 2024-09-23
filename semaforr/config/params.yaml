@@ -1,0 +1,61 @@
+my_node:
+  ros__parameters:
+    # Spatial model on/off
+    trailsOn: 1
+    conveyorsOn: 1
+    regionsOn: 1
+    doorsOn: 1
+    hallwaysOn: 0
+    barrsOn: 0
+    
+    highwaysOn: 1
+    frontiersOn: 0
+    outofhereOn: 1
+    doorwayOn: 1
+    findawayOn: 1
+    behindOn: 1
+    dontgobackOn: 0
+    
+    # Possible actions
+    move: [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
+    rotate: [0, 0.0873, 0.2618, 0.5236, 0.7854, 1.0472, 1.5708]
+    
+    # Decision count limit
+    decisionlimit: 1500
+    
+    # Epsilons
+    canSeePointEpsilon: 0.005
+    laserScanRadianIncrement: 0.005817
+    robotFootPrint: 0.2794
+    bufferForRobot: 0.05
+    maxLaserRange: 25
+    maxForwardActionBuffer: 0.1
+    maxForwardActionSweepAngle: 0.5236
+    highwayDistanceThreshold: 5
+    highwayTimeThreshold: 3600
+    highwayDecisionThreshold: 1500
+    
+    # A* on or off
+    aStarOn: 1
+    
+    planLimit: 500
+    
+    # Planners
+    distance: 1
+    smooth: 0
+    novel: 0
+    density: 0
+    risk: 0
+    flow: 0
+    combined: 0
+    CUSUM: 0
+    discount: 0
+    explore: 0
+    spatial: 0
+    hallwayer: 0
+    trailer: 0
+    barrier: 0
+    conveys: 0
+    safe: 0
+    skeleton: 0
+    hallwayskel: 1
