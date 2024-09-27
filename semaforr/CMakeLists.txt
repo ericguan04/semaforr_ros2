@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/semaforr/
   ${Python3_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_c/
 )
 
 ## Declare a C++ executable
@@ -62,8 +63,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Install launch files
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}/
-)
+# install(DIRECTORY launch
+#   DESTINATION share/${PROJECT_NAME}/
+# )`
 
-ament_package()
+ament_package()`

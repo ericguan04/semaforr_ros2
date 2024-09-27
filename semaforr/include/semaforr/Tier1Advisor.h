@@ -13,7 +13,7 @@
 #include "LocalExplore.h"
 
 // A t1 advisor class contains a list of functions each of which returns a single action or vetoes a set of actions
-class Tier1Advisor : public rclcpp::Node {
+class Tier1Advisor {
 
 public:
         Tier1Advisor(Beliefs *b){

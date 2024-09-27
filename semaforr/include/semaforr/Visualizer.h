@@ -1285,7 +1285,22 @@ public:
 	poseStamped.pose.position.x = robotX;
 	poseStamped.pose.position.y = robotY;
 	poseStamped.pose.position.z = 0;
-	poseStamped.pose.orientation = tf2::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, robotTheta);
+
+	float roll = 0.0;
+	float pitch = 0.0;
+	float yaw = robotTheta;
+
+	tf2::Quaternion myQuaternion;
+	myQuaternion.setRPY( roll, pitch, yaw );
+
+	// Convert tf2::Quaternion to geometry_msgs::msg::Quaternion
+	geometry_msgs::msg::Quaternion quat;
+	quat.x = myQuaternion.x();
+	quat.y = myQuaternion.y();
+	quat.z = myQuaternion.z();
+	quat.w = myQuaternion.w();
+
+	poseStamped.pose.orientation = quat;
 	pose_pub_->publish(poseStamped);
 
 	if(beliefs->getAgentState()->getCurrentTask() != NULL) {
@@ -1470,12 +1485,18 @@ public:
 	//// RCLCPP_DEBUG(this->get_logger(), "After all crowdStream");
 
 	std::stringstream crowdModel;
-	semaforr::CrowdModel model = con->getPlanner()->getCrowdModel();
+	semaforr__msg__CrowdModel model = con->getPlanner()->getCrowdModel();
 	int resolution = model.resolution;
 	int height = model.height;
 	int width = model.width;
-	std::vector<double> densities = model.densities;
-	std::vector<double> risk = model.risk;
+	std::vector<double> densities(
+		model.densities.data, 
+		model.densities.data + model.densities.size
+	);
+	std::vector<double> risk(
+		model.risk.data, 
+		model.risk.data + model.risk.size
+	);
 	crowdModel << height << " " << width << " " << resolution << ";";
 	for(int i = 0; i < densities.size() ; i++){
 		crowdModel << densities[i] << " ";
@@ -1485,42 +1506,66 @@ public:
 		crowdModel << risk[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> left = model.left;
+	std::vector<double> left(
+		model.left.data, 
+		model.left.data + model.left.size
+	);
 	for(int i = 0; i < left.size() ; i++){
 		crowdModel << left[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> right = model.right;
+	std::vector<double> right(
+		model.right.data, 
+		model.right.data + model.right.size
+	);
 	for(int i = 0; i < right.size() ; i++){
 		crowdModel << right[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> up = model.up;
+	std::vector<double> up(
+		model.up.data, 
+		model.up.data + model.up.size
+	);
 	for(int i = 0; i < up.size() ; i++){
 		crowdModel << up[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> down = model.down;
+	std::vector<double> down(
+		model.down.data, 
+		model.down.data + model.down.size
+	);
 	for(int i = 0; i < down.size() ; i++){
 		crowdModel << down[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> up_left = model.up_left;
+	std::vector<double> up_left(
+		model.up_left.data, 
+		model.up_left.data + model.up_left.size
+	);
 	for(int i = 0; i < up_left.size() ; i++){
 		crowdModel << up_left[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> up_right = model.up_right;
+	std::vector<double> up_right(
+		model.up_right.data, 
+		model.up_right.data + model.up_right.size
+	);
 	for(int i = 0; i < up_right.size() ; i++){
 		crowdModel << up_right[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> down_left = model.down_left;
+	std::vector<double> down_left(
+		model.down_left.data, 
+		model.down_left.data + model.down_left.size
+	);
 	for(int i = 0; i < down_left.size() ; i++){
 		crowdModel << down_left[i] << " ";
 	}
 	crowdModel << "\t";
-	std::vector<double> down_right = model.down_right;
+	std::vector<double> down_right(
+		model.down_right.data, 
+		model.down_right.data + model.down_right.size
+	);
 	for(int i = 0; i < down_right.size() ; i++){
 		crowdModel << down_right[i] << " ";
 	}

@@ -20,7 +20,7 @@
 #include <map>
 #include <algorithm>
 #include <queue>
-
+#include <semaforr/msg/crowd_model.h>
 //#include <semaforr/CrowdModel.h>
 
 using namespace std;
@@ -36,7 +36,7 @@ private:
   Graph * navGraph;
   Graph * originalNavGraph;
   Map map;
-  semaforr::CrowdModel crowdModel;
+  semaforr__msg__CrowdModel crowdModel;
   Node source, target; 
   list<int> path;
   vector< list<int> > paths;
@@ -139,10 +139,10 @@ public:
     // origPathCosts.clear();
   }
 
-  void setCrowdModel(semaforr::CrowdModel c){ 
+  void setCrowdModel(semaforr__msg__CrowdModel c){ 
 	crowdModel = c;
   }
-  semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
+  semaforr__msg__CrowdModel getCrowdModel(){ return crowdModel;}
 
   void setOriginalNavGraph(Graph * navGraph){ 
     originalNavGraph = navGraph;

@@ -32,7 +32,7 @@
 
 using namespace std;
 
-class AgentState : public rclcpp::Node
+class AgentState
 {
 public:
   /** \brief AgentState constructor */
@@ -423,10 +423,10 @@ public:
 	allCrowd = crowdposeall;
   }
 
-  void setCrowdModel(semaforr::CrowdModel c){ 
+  void setCrowdModel(semaforr__msg__CrowdModel c){ 
     crowdModel = c;
   }
-  semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
+  semaforr__msg__CrowdModel getCrowdModel(){ return crowdModel;}
 
   bool crowdModelLearned();
   bool riskModelLearned();
@@ -573,7 +573,7 @@ public:
   geometry_msgs::msg::PoseArray allCrowd;
 
   // Current crowd model
-  semaforr::CrowdModel crowdModel;
+  semaforr__msg__CrowdModel crowdModel;
 
   //Rotate mode tells if the t3 should rotate or move
   bool rotateMode;

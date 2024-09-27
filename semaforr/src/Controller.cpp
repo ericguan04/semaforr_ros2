@@ -36,12 +36,16 @@ void Controller::initialize_advisors(string filename){
   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Reading read_advisor_file:" << filename);
   if(!file.is_open()){
     // RCLCPP_DEBUG(this->get_logger(), "Unable to locate or read advisor config file!");
+    return;
   }
   //read advisor names and parameters from the config file and create new advisor objects
   while(getline(file, fileLine)){
     if(fileLine[0] == '#')  // skip comment lines
+    {
       continue;
-    else{
+    }
+    else
+    {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
       std::istream_iterator<std::string> end;
@@ -49,8 +53,11 @@ void Controller::initialize_advisors(string filename){
       advisor_name = vstrings[0];
       advisor_description = vstrings[1];
       if(vstrings[2] == "t")
+      {
         advisor_active = true;
+      }
       else
+      {
         advisor_active = false;
         advisor_weight = atof(vstrings[3].c_str());
         parameters[0]= atof(vstrings[4].c_str());
@@ -58,12 +65,15 @@ void Controller::initialize_advisors(string filename){
         parameters[2] = atof(vstrings[6].c_str());
         parameters[3] = atof(vstrings[7].c_str());
         tier3Advisors.push_back(Tier3Advisor::makeAdvisor(getBeliefs(), advisor_name, advisor_description, advisor_weight, parameters, advisor_active));
+      }
     }
   }
      
   // RCLCPP_DEBUG_STREAM(this->get_logger(), "" << tier3Advisors.size() << " advisors registered.");
   for(unsigned i = 0; i < tier3Advisors.size(); ++i)
+  {
     // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created advisor " << tier3Advisors[i]->get_name() << " with weight: " << tier3Advisors[i]->get_weight());
+  }
 
   //CONVEYORS = isAdvisorActive("ConveyLinear");
   //REGIONS = isAdvisorActive("ExitLinear");
@@ -901,7 +911,7 @@ void Controller::initialize_spatial_model(string filename){
 // Initialize the controller and setup messaging to ROS
 //
 //
-Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions) : Node("controller") {
+Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions) {
 
   // Initialize robot parameters from a config file
   initialize_params(params_config);

@@ -37,7 +37,7 @@ private:
     //! We will be listening to /pose, /laserscan and /crowd_model, /crowd_pose topics
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pose_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_laser_;
-    rclcpp::Subscription<semaforr::msg::CrowdModel>::SharedPtr sub_crowd_model_;
+    rclcpp::Subscription<semaforr__msg__CrowdModel>::SharedPtr sub_crowd_model_;
     rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr sub_crowd_pose_;
     rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr sub_crowd_pose_all_;
 
@@ -46,7 +46,7 @@ private:
     // Current and previous laser scan
     sensor_msgs::msg::LaserScan laserscan;
     // Current crowd_model
-    semaforr::msg::CrowdModel crowdModel;
+    semaforr__msg__CrowdModel crowdModel;
     // Current crowd_pose
     geometry_msgs::msg::PoseArray crowdPose, crowdPoseAll;
     // Controller
@@ -62,7 +62,6 @@ public:
     //! ROS node initialization
     RobotDriver(Controller *con)
         : Node("semaforr")
-        : rclcpp::Node
     {
         // Set up the publisher for the cmd_vel topic
         cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 1);
@@ -70,7 +69,7 @@ public:
             "pose", 10, std::bind(&RobotDriver::updatePose, this, std::placeholders::_1));
         sub_laser_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             "base_scan", 10, std::bind(&RobotDriver::updateLaserScan, this, std::placeholders::_1));
-        sub_crowd_model_ = this->create_subscription<semaforr::msg::CrowdModel>(
+        sub_crowd_model_ = this->create_subscription<semaforr__msg__CrowdModel>(
             "crowd_model", 10, std::bind(&RobotDriver::updateCrowdModel, this, std::placeholders::_1));
         sub_crowd_pose_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
             "crowd_pose", 10, std::bind(&RobotDriver::updateCrowdPose, this, std::placeholders::_1));
@@ -89,7 +88,6 @@ public:
         previous.setY(0);
         previous.setTheta(0);
         auto node_ptr = shared_from_this();
-        classB = std::make_shared<Visualizer>(node_ptr);
         viz_ = new Visualizer(node_ptr, con);
     }
 
@@ -106,7 +104,7 @@ public:
     }
 
     // Callback function for crowd model message
-    void updateCrowdModel(const semaforr::msg::CrowdModel &crowd_model)
+    void updateCrowdModel(const semaforr__msg__CrowdModel &crowd_model)
     {
         controller->getPlanner()->setCrowdModel(crowd_model);
         controller->updatePlannersModels(crowd_model);
@@ -206,90 +204,178 @@ public:
                     controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
                     controller->getfrontierExploration()->setFrontiersComplete(overallTimeSec);
                 }
-                gettimeofday(&cv, NULL);
-                start_timecv = cv.tv_sec + (cv.tv_usec / 1000000.0);
-                controller->updateBeliefs(current, laserscan, crowdPose, crowdPoseAll, overallTimeSec);
-                semaforr_action = controller->deliberate();
-                gettimeofday(&cv, NULL);
-                end_timecv = cv.tv_sec + (cv.tv_usec / 1000000.0);
-                computationTimeSec = (end_timecv - start_timecv);
-                if (controller->getBeliefs()->goalReached(current))
+                gettimeofday(&cv,NULL);
+				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
+				// ROS_DEBUG("Finished UpdateState");
+				viz_->publish();
+				// ROS_DEBUG("Finished Publish");
+				previous = current;
+				//ROS_DEBUG("Check if mission is complete");
+				mission_complete = controller->isMissionComplete();
+                
+                if(mission_complete)
                 {
-                    mission_complete = true;
-                    // RCLCPP_INFO(this->get_logger(), "Mission completed, goal reached.");
-                }
-                else if (semaforr_action.getCode() == "Nothing")
+					// ROS_INFO("Mission completed");
+					gettimeofday(&cv,NULL);
+					end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+					computationTimeSec = (end_timecv-start_timecv);
+					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+					controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
+					controller->getfrontierExploration()->setFrontiersComplete(overallTimeSec);
+					break;
+				}
+				else
                 {
-                    mission_complete = true;
-                    // RCLCPP_INFO(this->get_logger(), "Mission failed, semaforr did not generate an action.");
-                }
-                else
-                {
-                    action_complete = false;
-                    action_start_time = overallTimeSec;
-                }
-            }
-            else
-            {
-                if (semaforr_action.getCode() == "Move")
-                {
-                    // RCLCPP_INFO(this->get_logger(), "Move command: Distance remaining %f %f", semaforr_action.getParameter(0), epsilon_move);
-                    if (semaforr_action.getParameter(0) < epsilon_move)
-                    {
-                        action_complete = true;
-                        action_end_time = overallTimeSec;
-                        actionTimeSec = (action_end_time - action_start_time);
-                        controller->updateExploration(current, previous, actionTimeSec, overallTimeSec, true);
-                    }
-                    else
-                    {
-                        base_cmd.linear.x = min(0.8, semaforr_action.getParameter(0));
-                    }
-                }
-                else if (semaforr_action.getCode() == "Turn")
-                {
-                    // RCLCPP_INFO(this->get_logger(), "Turn command: Distance remaining %f %f", semaforr_action.getParameter(0), epsilon_turn);
-                    if (semaforr_action.getParameter(0) < epsilon_turn)
-                    {
-                        action_complete = true;
-                        action_end_time = overallTimeSec;
-                        actionTimeSec = (action_end_time - action_start_time);
-                        controller->updateExploration(current, previous, actionTimeSec, overallTimeSec, false);
-                    }
-                    else
-                    {
-                        base_cmd.angular.z = min(1.0, semaforr_action.getParameter(0));
-                    }
-                }
-                else
-                {
-                    action_complete = true;
-                }
-            }
-            previous = current;
-            cmd_vel_pub_->publish(base_cmd);
-            base_cmd.linear.x = 0;
-            base_cmd.angular.z = 0;
-            rclcpp::spin_some(shared_from_this());
-            if (mission_complete)
-            {
-                break;
-            }
-            rate.sleep();
-        }
-        Py_Finalize();
-    }
+					// ROS_INFO("Mission still in progress, invoke semaforr");
+					semaforr_action = controller->decide();
+					// ROS_INFO_STREAM("SemaFORRdecision is " << semaforr_action.type << " " << semaforr_action.parameter); 
+					base_cmd = convert_to_vel(semaforr_action);
+					action_complete = false;
+					actionTimeSec=0.0;
+					gettimeofday(&atv,NULL);
+					action_start_time = atv.tv_sec + (atv.tv_usec/1000000.0);
+				}
+				gettimeofday(&cv,NULL);
+				end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+				computationTimeSec = (end_timecv-start_timecv);
+			}
+			//send the drive command 
+			cmd_vel_pub_->publish(base_cmd);
+			//ROS_INFO_STREAM("Published base_cmd : " << overallTimeSec);
+			//wait for some time
+			rate.sleep();
+			// Sense input 
+			rclcpp::spin_some(shared_from_this());
+			gettimeofday(&atv,NULL);
+			action_end_time = atv.tv_sec + (atv.tv_usec/1000000.0);
+			actionTimeSec = (action_end_time - action_start_time);
+			//ROS_INFO_STREAM("Action Time (sec) : " << actionTimeSec);
+			// Check if the action is complete
+			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
+			//action_complete = true;
+		}
+		Py_Finalize();
+	}
+
+
+	//! Drive the robot according to the semaforr action, episilon = 0 to 1 indicating percent of task completion
+	// Need to improve this
+	bool testActionCompletion(FORRAction action, Position current, Position previous, double epsilon_move, double epsilon_rotate, double elapsed_time)
+	{
+		// ROS_DEBUG("Testing if action has been completed by the robot");
+		// ROS_DEBUG_STREAM("Current position " << current.getX() << " " << current.getY() << " " << current.getTheta()); 
+		// ROS_DEBUG_STREAM("Previous position " << previous.getX() << " " << previous.getY() << " " << previous.getTheta());
+		bool actionComplete = false;
+		//ROS_DEBUG_STREAM("Position expected " << expected.getX() << " " << expected.getY() << " " << expected.getTheta());
+		if (action.type == FORWARD){
+			double distance_travelled = previous.getDistance(current);
+			double expected_travel = controller->getBeliefs()->getAgentState()->getMovement(action.parameter);
+			//if((abs(distance_travelled - expected_travel) < epsilon_move)){
+			// if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(distance_travelled - expected_travel));
+				actionComplete = true;
+			}
+			else{
+				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(distance_travelled - expected_travel));
+				actionComplete = false;  
+			}
+		}
+		else if(action.type == RIGHT_TURN or action.type == LEFT_TURN){
+			double turn_completed = current.getTheta() - previous.getTheta();
+		
+			if(turn_completed > M_PI)
+				turn_completed = turn_completed - (2*M_PI);
+			if(turn_completed < -M_PI)
+				turn_completed = turn_completed + (2*M_PI);
+
+			double turn_expected = fabs(controller->getBeliefs()->getAgentState()->getRotation(action.parameter));
+			//if(action.type == RIGHT_TURN) 
+			//	turn_expected = (-1)*turn_expected;
+			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
+			// if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){
+			if((elapsed_time >= turn_expected/0.5) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate) and fabs(turn_completed) > 0){
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
+				actionComplete = true;
+			}
+			else {
+				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(turn_completed - turn_expected));
+				actionComplete = false;
+			}
+		}
+		else if((action.type == PAUSE) or (elapsed_time >= 0.01)){
+			//ROS_INFO_STREAM("elapsed_time : " << elapsed_time);
+			actionComplete = true;
+		}
+		//ROS_DEBUG_STREAM(" Action Completed ? : " << actionComplete);
+		return actionComplete;
+	}
+
+	
+	// Function that converts FORRAction into ROS compatible base_cmd
+
+	geometry_msgs::msg::Twist convert_to_vel(FORRAction action){
+
+		geometry_msgs::msg::Twist base_cmd;
+
+		base_cmd.linear.x = base_cmd.linear.y = base_cmd.angular.z = 0; 
+		if(action.type == FORWARD){
+			base_cmd.linear.x = 0.5; //0.5 meters per second
+		}   
+		else if(action.type == RIGHT_TURN){
+			base_cmd.linear.x = 0.01;
+			base_cmd.angular.z = -0.05; //-0.05 radians per second
+		}
+		else if(action.type == LEFT_TURN){
+			base_cmd.linear.x = 0.01;
+			base_cmd.angular.z = 0.05; //0.05 radians per second
+		}
+		else if(action.type == PAUSE){
+			base_cmd.linear.x = 0;
+		}
+		return base_cmd;
+	}
+
 };
 
-int main(int argc, char **argv)
-{
-    Py_Initialize();
-    // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Starting... semaforr");
-    Controller *controller = new Controller();
-    auto robot_driver = std::make_shared<RobotDriver>(controller);
-    robot_driver->initialize();
-    robot_driver->run();
-    Py_Finalize();
+int main(int argc, char **argv) {
+    // Initialize the ROS 2 node
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<rclcpp::Node>("semaforr");
+
+    // RCLCPP_INFO(node->get_logger(), "Starting... semaforr");
+
+    if (argc != 6) {  // Updated to match the number of parameters passed
+        // RCLCPP_ERROR(node->get_logger(), "Not enough parameters. Expected 6, got %d", argc);
+        return 1;  // Exit if not enough parameters
+    }
+
+    std::string path(argv[1]);
+    std::string target_set(argv[2]);
+    std::string map_config(argv[3]);
+    std::string map_dimensions(argv[4]);
+    std::string advisors(argv[5]);
+    std::string params(argv[6]);
+
+    std::string advisor_config = path + advisors;
+    std::string params_config = path + params;
+
+    // Create the controller
+    Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions);
+    // RCLCPP_INFO(node->get_logger(), "Controller Initialized");
+
+    // Create the RobotDriver and pass the node to it
+    RobotDriver driver(controller);
+    driver.initialize();
+    // RCLCPP_INFO(node->get_logger(), "Robot Driver Initialized");
+
+    // Run the driver
+    driver.run();
+
+    // RCLCPP_INFO(node->get_logger(), "Mission Accomplished!");
+
+    // Shutdown ROS 2
     rclcpp::shutdown();
     return 0;
 }

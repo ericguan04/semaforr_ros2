@@ -61,7 +61,7 @@ public:
 
   std::vector<PathPlanner*> getPlanners() { return tier2Planners; }
 
-  void updatePlannersModels(semaforr::CrowdModel c) {
+  void updatePlannersModels(semaforr__msg__CrowdModel c) {
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       planner->setCrowdModel(c);

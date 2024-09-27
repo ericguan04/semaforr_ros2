@@ -346,13 +346,13 @@ int PathPlanner::calcOrigPath(bool cautious){
 
 void PathPlanner::updateNavGraph(){
 	cout << "Updating nav graph before" << endl;
-	if(crowdModel.densities.size() == 0 and (name == "density" or name == "risk" or name == "flow")){
+	if(crowdModel.densities.size == 0 and (name == "density" or name == "risk" or name == "flow")){
 		cout << "crowdModel not recieved" << endl;
 	}
 	else{
 		//cout << crowdModel.height << endl;
 		/*for(int i = 0 ; i < crowdModel.densities.size(); i++){
-			cout << crowdModel.densities[i] << endl;
+			cout << crowdModel.densities.data[i] << endl;
 		}*/
 		vector<Edge*> edges = navGraph->getEdges();
 		// compute the extra cost imposed by crowd model on each edge in navGraph
@@ -1047,11 +1047,11 @@ double PathPlanner::cellCost(int nodex, int nodey, int buffer){
 	int y2 = (int)(((nodey-buffer)/100.0)/crowdModel.resolution);
 
 	//std::cout << "x " << x << " y " << y;
-	double d = crowdModel.densities[(y * crowdModel.width) + x];
-	double d1 = crowdModel.densities[(y1 * crowdModel.width) + x];
-	double d2 = crowdModel.densities[(y2 * crowdModel.width) + x];
-	double d3 = crowdModel.densities[(y * crowdModel.width) + x1];
-	double d4 = crowdModel.densities[(y * crowdModel.width) + x2];
+	double d = crowdModel.densities.data[(y * crowdModel.width) + x];
+	double d1 = crowdModel.densities.data[(y1 * crowdModel.width) + x];
+	double d2 = crowdModel.densities.data[(y2 * crowdModel.width) + x];
+	double d3 = crowdModel.densities.data[(y * crowdModel.width) + x1];
+	double d4 = crowdModel.densities.data[(y * crowdModel.width) + x2];
 	//std::cout << " Cell cost " << d << std::endl;
 	//return (d + d1 + d2 + d3 + d4)/5;
 	double da = std::max(std::max(d, d1),d2);
@@ -1070,11 +1070,11 @@ double PathPlanner::riskCost(int nodex, int nodey, int buffer){
   int y2 = (int)(((nodey-buffer)/100.0)/crowdModel.resolution);
 
   //std::cout << "x " << x << " y " << y;
-  double d = crowdModel.risk[(y * crowdModel.width) + x];
-  double d1 = crowdModel.risk[(y1 * crowdModel.width) + x];
-  double d2 = crowdModel.risk[(y2 * crowdModel.width) + x];
-  double d3 = crowdModel.risk[(y * crowdModel.width) + x1];
-  double d4 = crowdModel.risk[(y * crowdModel.width) + x2];
+  double d = crowdModel.risk.data[(y * crowdModel.width) + x];
+  double d1 = crowdModel.risk.data[(y1 * crowdModel.width) + x];
+  double d2 = crowdModel.risk.data[(y2 * crowdModel.width) + x];
+  double d3 = crowdModel.risk.data[(y * crowdModel.width) + x1];
+  double d4 = crowdModel.risk.data[(y * crowdModel.width) + x2];
   //std::cout << " Cell cost " << d << std::endl;
   //return (d + d1 + d2 + d3 + d4)/5;
   double da = std::max(std::max(d, d1),d2);
@@ -1090,23 +1090,23 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 	int d_x_index = (int)((d.getX()/100.0)/crowdModel.resolution);
 	int d_y_index = (int)((d.getY()/100.0)/crowdModel.resolution);
 	//Assuming crowd densities are normalized between 0 and 1
-	double s_l = crowdModel.left[(s_y_index * crowdModel.width) + s_x_index];
-	double d_l = crowdModel.left[(d_y_index * crowdModel.width) + d_x_index];
-	double s_r = crowdModel.right[(s_y_index * crowdModel.width) + s_x_index];
-	double d_r = crowdModel.right[(d_y_index * crowdModel.width) + d_x_index];
-	double s_u = crowdModel.up[(s_y_index * crowdModel.width) + s_x_index];
-	double d_u = crowdModel.up[(d_y_index * crowdModel.width) + d_x_index];
-	double s_d = crowdModel.down[(s_y_index * crowdModel.width) + s_x_index];
-	double d_d = crowdModel.down[(d_y_index * crowdModel.width) + d_x_index];
+	double s_l = crowdModel.left.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_l = crowdModel.left.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_r = crowdModel.right.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_r = crowdModel.right.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_u = crowdModel.up.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_u = crowdModel.up.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_d = crowdModel.down.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_d = crowdModel.down.data[(d_y_index * crowdModel.width) + d_x_index];
 
-	double s_ul = crowdModel.up_left[(s_y_index * crowdModel.width) + s_x_index];
-	double d_ul = crowdModel.up_left[(d_y_index * crowdModel.width) + d_x_index];
-	double s_ur = crowdModel.up_right[(s_y_index * crowdModel.width) + s_x_index];
-	double d_ur = crowdModel.up_right[(d_y_index * crowdModel.width) + d_x_index];
-	double s_dl = crowdModel.down_left[(s_y_index * crowdModel.width) + s_x_index];
-	double d_dl = crowdModel.down_left[(d_y_index * crowdModel.width) + d_x_index];
-	double s_dr = crowdModel.down_right[(s_y_index * crowdModel.width) + s_x_index];
-	double d_dr = crowdModel.down_right[(d_y_index * crowdModel.width) + d_x_index];
+	double s_ul = crowdModel.up_left.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_ul = crowdModel.up_left.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_ur = crowdModel.up_right.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_ur = crowdModel.up_right.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_dl = crowdModel.down_left.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_dl = crowdModel.down_left.data[(d_y_index * crowdModel.width) + d_x_index];
+	double s_dr = crowdModel.down_right.data[(s_y_index * crowdModel.width) + s_x_index];
+	double d_dr = crowdModel.down_right.data[(d_y_index * crowdModel.width) + d_x_index];
 
 	//cout << "Left : " << d_l << " * " << s_l << endl;
 	//cout << "Right : " << d_r << " * " << s_r << endl;
