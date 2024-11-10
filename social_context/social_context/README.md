@@ -1,5 +1,9 @@
-camera_listener.py - subscribes to sensor data, processes the data, and publishes to social context model node
+# Social Context Package Nodes
 
-social_context.py - subscribes to the camera_listener node, processes the data, and updates the social context model data structure
+## `camera_listener.py` 
+* `CameraListener(Node)`: Subscribes to sensor data, processes the data, and publishes to social context model node
+* Names subject to change
 
-Names are subject to change
+## `social_context.py`
+* `CoordinateListener(Node)`: A ROS2 node that subscribes to a topic to receive pedestrian coordinates, updates a social context model, and makes trajectory predictions.
+* `social_context_model`: A dictionary containing pedestrian IDs, coordinates, and predictions. Used by SemaFORR reasoning and decision making architecture
