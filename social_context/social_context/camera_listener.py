@@ -40,7 +40,7 @@ class CameraListener(Node):
             # Convert ROS Image message to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             
-            # Process the image (for example, convert to grayscale)
+            # Here is where the processing will be located
             processed_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
             self.get_logger().info("Image processed!")
             
