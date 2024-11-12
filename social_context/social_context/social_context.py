@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from geometry_msgs.msg import PoseStamped
 import cv2
 
 from collections import defaultdict # might need to use default dict
@@ -28,6 +29,8 @@ CoordinateListener:
             coordinate: The (x, y) coordinates of the pedestrian.
         
         make_predictions(self): Generates trajectory predictions based on the social context model.
+
+        publish_pose_stamped(self, id, coordinate): Publishes the predicted position of a pedestrian using PoseStamped messages.
         
         social_context_to_raw_data(social_context_model): Converts the social context model to raw data format for the prediction pipeline.
             social_context_model: The social context model containing pedestrian IDs, coordinates, and predictions.
@@ -39,7 +42,7 @@ class CoordinateListener(Node):
         
         # Subscriber node will receive pedestrian ID and (x, y) coordinates
         # Update this when sensor_listener is ready
-        self.subscription = self.create_subscription(
+        self.camera_subscriber = self.create_subscription(
             Image,
             '/camera/processed_image',
             # Every time a new message is received, call the image_callback function
@@ -49,8 +52,15 @@ class CoordinateListener(Node):
         
         self.bridge = CvBridge()
         
-        # Social context model will store pedestrian data in the environment
+        # Social context model will store pedestrian data in the environment (publish dict to semaforr)
         self.social_context_model = {}
+
+        # Publisher for predicted positions using PoseStamped
+        self.pose_publisher = self.create_publisher(
+            PoseStamped,
+            '/pedestrian_predictions',
+            10
+        )
         
         self.get_logger().info("Coordinate listener node and social context model is running")
 
@@ -88,6 +98,19 @@ class CoordinateListener(Node):
         for key, value in traj_preds.items():
             for coord in value:
                 self.social_context_model[key]["predictions"].append(coord)
+    
+    def publish_pose_stamped(self, id, coordinate):
+        # Create PoseStamped message
+        pose_msg = PoseStamped()
+        pose_msg.header.frame_id = str(id)  # Use ID as frame_id for identification
+        pose_msg.header.stamp = self.get_clock().now().to_msg()
+        pose_msg.pose.position.x = coordinate[0]
+        pose_msg.pose.position.y = coordinate[1]
+        pose_msg.pose.position.z = 0.0  # Z-axis not used in 2D prediction
+
+        # Publish the PoseStamped message
+        self.pose_publisher.publish(pose_msg)
+        self.get_logger().info(f"Published predicted position for ID {id}")
 
     def social_context_to_raw_data(social_context_model):
         raw_data = []

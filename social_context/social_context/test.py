@@ -52,7 +52,7 @@ print(raw_data)
 
 traj_preds = pipeline(raw_data, 3, 3)
 
-print(traj_preds)
+# print(traj_preds)
 
 print()
 
