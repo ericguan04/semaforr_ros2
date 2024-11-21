@@ -1,0 +1,163 @@
+hunav_loader:
+  ros__parameters:
+    map: small_house
+    publish_people: true
+    agents:
+      - Francis
+      - John
+      - Jesus
+    Francis:
+      id: 1
+      skin: 0
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 1 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 0 # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 40.0  # seg
+        once: true
+        vel: 0.6
+        dist: 0.0
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 5.0
+        other_force_factor: 20.0
+      init_pose:
+        x: 0.3828
+        y: 1.7832
+        z: 1.250000
+        h: 0.0
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+        - g3
+      g0:
+        x: 3.2767
+        y: 0.3750
+        h: 1.250000
+      g1:
+        x: 5.5734
+        y: -2.9159
+        h: 1.250000
+      g2:
+        x: 3.2767
+        y: 0.3750
+        h: 1.250000
+      g3:
+        x: 0.3828
+        y: 1.7832
+        h: 1.250000
+    John:
+      id: 2
+      skin: 4
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 3 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 2   # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 40.0  # seg
+        once: true
+        vel: 0.6
+        dist: 0.0
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 5.0
+        other_force_factor: 20.0
+      init_pose:
+        x: 6.93216
+        y: -1.3903
+        z: 1.250000
+        h: 0.0
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+        - g3
+        - g4
+        - g5
+      g0:
+        x: 3.1124
+        y: -3.8835
+        h: 1.250000
+      g1:
+        x: -1.4936
+        y: -4.0631
+        h: 1.250000
+      g2:
+        x: -1.8306
+        y: -1.6598
+        h: 1.250000
+      g3:
+        x: -1.4936
+        y: -4.0631
+        h: 1.250000
+      g4:
+        x: 3.1124
+        y: -3.8835
+        h: 1.250000
+      g5:
+        x: 6.93216
+        y: -1.3903
+        h: 1.250000
+    Jesus:
+      id: 3
+      skin: 3
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 5 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 30.0  # seg
+        once: true
+        vel: 0.8
+        dist: 1.5
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 5.0
+        other_force_factor: 20.0
+      init_pose:
+        x: -7.7623
+        y: -2.7828
+        z: 1.250000
+        h: 0.0
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+        - g3
+        - g4
+        - g5
+      g0:
+        x: -3.6506
+        y: -2.6256
+        h: 1.250000
+      g1:
+        x: -1.4486
+        y: -0.0875
+        h: 1.250000
+      g2:
+        x: -0.5499
+        y: 2.3607
+        h: 1.250000
+      g3:
+        x: -1.4486
+        y: -0.0875
+        h: 1.250000
+      g4:
+        x: -3.6506
+        y: -2.6256
+        h: 1.250000
+      g5:
+        x: -7.7623
+        y: -2.7828
+        h: 1.250000
