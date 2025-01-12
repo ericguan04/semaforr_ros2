@@ -1,11 +1,11 @@
 /* \mainpage ROSiffied semaforr Documentation
  * \brief RobotDriver governs low-level actions of a robot.
  *
- * \author Anoop Aroor, Raj Korpan and others.
- *
- * \version SEMAFORR ROS 1.0
- *
- *
+ *  
+ * \author Eric Guan, Raj Korpan
+ * \version Semaforr ROS 2.0
+ * \Hunter College Fall 2024
+ * 
  */
 
 #include <iostream>
@@ -29,7 +29,7 @@
 using namespace std;
 
 // Main interface between SemaFORR and ROS, all ROS related information should be in RobotDriver
-class RobotDriver : public rclcpp::Node
+class RobotDriver : public rclcpp::Node, public std::enable_shared_from_this<RobotDriver>
 {
 private:
     //! We will be publishing to the "cmd_vel" topic to issue commands
@@ -60,24 +60,70 @@ private:
 
 public:
     //! ROS node initialization
-    RobotDriver(Controller *con)
-        : Node("semaforr")
+    RobotDriver() : Node("semaforr")
     {
+        // Pass in arguments for SemaFORR Controller
+        this->declare_parameter("semaforr_path", rclcpp::PARAMETER_STRING);
+        this->declare_parameter("target_set", rclcpp::PARAMETER_STRING);
+        this->declare_parameter("map_config", rclcpp::PARAMETER_STRING);
+        this->declare_parameter("map_dimensions", rclcpp::PARAMETER_STRING);
+        this->declare_parameter("advisors", rclcpp::PARAMETER_STRING);
+        this->declare_parameter("params", rclcpp::PARAMETER_STRING);
+
+        // Unpack the passed in arguments
+        rclcpp::Parameter semaforr_path_param = this->get_parameter("semaforr_path");
+        rclcpp::Parameter target_set_param = this->get_parameter("target_set");
+        rclcpp::Parameter map_config_param = this->get_parameter("map_config");
+        rclcpp::Parameter map_dimensions_param = this->get_parameter("map_dimensions");
+        rclcpp::Parameter advisors_param = this->get_parameter("advisors");
+        rclcpp::Parameter params_param = this->get_parameter("params");
+
+        std::string semaforr_path = semaforr_path_param.as_string();
+        std::string target_set = target_set_param.as_string();
+        std::string map_config = map_config_param.as_string();
+        std::string map_dimensions = map_dimensions_param.as_string();
+        std::string advisors = advisors_param.as_string();
+        std::string params = params_param.as_string();
+
+        controller = new Controller(advisors, params, map_config, target_set, map_dimensions);
+
+        std::cout << "starting to declare pubs and subs" << std::endl;
         // Set up the publisher for the cmd_vel topic
         cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 1);
+        
+        cout << "cmd_vel_pub successful" << endl;
+        
         sub_pose_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
             "pose", 10, std::bind(&RobotDriver::updatePose, this, std::placeholders::_1));
+
+        cout << "sub_pose successful" << endl;
+
         sub_laser_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             "base_scan", 10, std::bind(&RobotDriver::updateLaserScan, this, std::placeholders::_1));
-        sub_crowd_model_ = this->create_subscription<semaforr__msg__CrowdModel>(
-            "crowd_model", 10, std::bind(&RobotDriver::updateCrowdModel, this, std::placeholders::_1));
-        sub_crowd_pose_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
-            "crowd_pose", 10, std::bind(&RobotDriver::updateCrowdPose, this, std::placeholders::_1));
-        sub_crowd_pose_all_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
-            "crowd_pose_all", 10, std::bind(&RobotDriver::updateCrowdPoseAll, this, std::placeholders::_1));
+        
+        cout << "sub_laser successful" << endl;
+
+        // sub_crowd_model_ = this->create_subscription<semaforr__msg__CrowdModel>(
+        //     "crowd_model", 10, std::bind(&RobotDriver::updateCrowdModel, this, std::placeholders::_1));
+        
+        // cout << "sub_crowd_model successful" << endl;
+        
+        // sub_crowd_pose_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
+        //     "crowd_pose", 10, std::bind(&RobotDriver::updateCrowdPose, this, std::placeholders::_1));
+        
+        // cout << "sub_crowd_pose successful" << endl;
+        
+        // sub_crowd_pose_all_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
+        //     "crowd_pose_all", 10, std::bind(&RobotDriver::updateCrowdPoseAll, this, std::placeholders::_1));
+
+        // cout << "sub_crowd_pose_all successful" << endl;
+        
+        std::cout << "finished declaring pubs and subs" << std::endl;
 
         // Declare and create a controller with task, action and advisor configuration
-        controller = con;
+        // controller = new Controller(advisors, params, map_config, target_set, map_dimensions);
+        // RCLCPP_INFO(node->get_logger(), "Controller Initialized");
+        // controller = con;
         init_pos_received = false;
         init_laser_received = false;
         current.setX(0);
@@ -87,8 +133,13 @@ public:
         previous.setX(0);
         previous.setY(0);
         previous.setTheta(0);
-        auto node_ptr = shared_from_this();
-        viz_ = new Visualizer(node_ptr, con);
+    }
+
+    // initialize the visualizer
+    void initialize_viz(rclcpp::Node::SharedPtr node_ptr) {
+        std::cout << "start of visualizer and after node_ptr" << std::endl;
+        viz_ = new Visualizer(node_ptr, controller);
+        std::cout << "visualizer successfully created" << std::endl;
     }
 
     // Callback function for crowd pose message
@@ -152,15 +203,18 @@ public:
     }
 
     // Collect initial sensor data from robot
-    void initialize()
+    void initialize(rclcpp::Node::SharedPtr node_ptr)
     {
-        rclcpp::spin_some(shared_from_this());
+        rclcpp::spin_some(node_ptr);
+        std::cout << "initialize successful" << std::endl;
         previous = current;
     }
 
     // Call semaforr and execute decisions, until mission is successful
-    void run()
+    void run(rclcpp::Node::SharedPtr node_ptr)
     {
+        std::cout << "started run" << std::endl;
+
         Py_Initialize();
         geometry_msgs::msg::Twist base_cmd;
 
@@ -176,15 +230,18 @@ public:
         double end_time, end_timecv;
         gettimeofday(&tv, NULL);
         start_time = tv.tv_sec + (tv.tv_usec / 1000000.0);
-        bool firstMessageReceived = false;
+        bool firstMessageReceived;
+
+        std::cout << "run declarations completed" << std::endl;
 
         while (rclcpp::ok())
         {
-            while (!init_pos_received || !init_laser_received)
+            std::cout << "within ok() while loop" << std::endl;
+            while (init_pos_received == false or init_laser_received == false)
             {
-                // RCLCPP_DEBUG(this->get_logger(), "Waiting for first message or laser");
+                RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first message or laser");
                 rate.sleep();
-                rclcpp::spin_some(shared_from_this());
+                rclcpp::spin_some(node_ptr);
                 firstMessageReceived = true;
             }
             gettimeofday(&tv, NULL);
@@ -193,8 +250,8 @@ public:
 
             if (action_complete)
             {
-                // RCLCPP_INFO(this->get_logger(), "Action completed. Save sensor info, Current position: %f %f %f", current.getX(), current.getY(), current.getTheta());
-                if (firstMessageReceived)
+                RCLCPP_INFO(node_ptr->get_logger(), "Action completed. Save sensor info, Current position: %f %f %f", current.getX(), current.getY(), current.getTheta());
+                if (firstMessageReceived == true)
                 {
                     firstMessageReceived = false;
                 }
@@ -216,7 +273,7 @@ public:
                 
                 if(mission_complete)
                 {
-					// ROS_INFO("Mission completed");
+					RCLCPP_INFO(node_ptr->get_logger(), "Mission completed");
 					gettimeofday(&cv,NULL);
 					end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 					computationTimeSec = (end_timecv-start_timecv);
@@ -227,9 +284,9 @@ public:
 				}
 				else
                 {
-					// ROS_INFO("Mission still in progress, invoke semaforr");
+					RCLCPP_INFO(node_ptr->get_logger(), "Mission still in progress, invoke semaforr");
 					semaforr_action = controller->decide();
-					// ROS_INFO_STREAM("SemaFORRdecision is " << semaforr_action.type << " " << semaforr_action.parameter); 
+					RCLCPP_INFO_STREAM(node_ptr->get_logger(), "SemaFORRdecision is " << semaforr_action.type << " " << semaforr_action.parameter); 
 					base_cmd = convert_to_vel(semaforr_action);
 					action_complete = false;
 					actionTimeSec=0.0;
@@ -246,7 +303,7 @@ public:
 			//wait for some time
 			rate.sleep();
 			// Sense input 
-			rclcpp::spin_some(shared_from_this());
+			rclcpp::spin_some(node_ptr);
 			gettimeofday(&atv,NULL);
 			action_end_time = atv.tv_sec + (atv.tv_usec/1000000.0);
 			actionTimeSec = (action_end_time - action_start_time);
@@ -342,36 +399,45 @@ public:
 int main(int argc, char **argv) {
     // Initialize the ROS 2 node
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<rclcpp::Node>("semaforr");
+    auto node = std::make_shared<RobotDriver>();
+    node->initialize_viz(node);
 
-    // RCLCPP_INFO(node->get_logger(), "Starting... semaforr");
+    RCLCPP_INFO(node->get_logger(), "Starting... semaforr");
 
-    if (argc != 6) {  // Updated to match the number of parameters passed
-        // RCLCPP_ERROR(node->get_logger(), "Not enough parameters. Expected 6, got %d", argc);
-        return 1;  // Exit if not enough parameters
-    }
+    // if (argc != 7) {
+    //     RCLCPP_ERROR(node->get_logger(), "Not enough parameters. Expected 6, got %d", argc);
+    //     return 1;  // Exit if not enough parameters
+    // }
 
-    std::string path(argv[1]);
-    std::string target_set(argv[2]);
-    std::string map_config(argv[3]);
-    std::string map_dimensions(argv[4]);
-    std::string advisors(argv[5]);
-    std::string params(argv[6]);
+    // std::string path(argv[1]);
+    // std::string target_set(argv[2]);
+    // std::string map_config(argv[3]);
+    // std::string map_dimensions(argv[4]);
+    // std::string advisors(argv[5]);
+    // std::string params(argv[6]);
 
-    std::string advisor_config = path + advisors;
-    std::string params_config = path + params;
+    // std::string advisor_config = path + advisors;
+    // std::string params_config = path + params;
 
     // Create the controller
-    Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions);
-    // RCLCPP_INFO(node->get_logger(), "Controller Initialized");
+    // Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions);
+    
+    // testing robot driver init
+    //auto driver_node = std::make_shared<RobotDriver>(RobotDriver(controller));
+    //rclcpp::spin(node);
 
     // Create the RobotDriver and pass the node to it
-    RobotDriver driver(controller);
-    driver.initialize();
-    // RCLCPP_INFO(node->get_logger(), "Robot Driver Initialized");
+    // cout << "Trying to construct the ROS2 Node" << endl;
+    // RobotDriver driver(controller);
+    // cout << "Succeeded in creating the ROS2 Node" << endl;
+
+    // std::cout << "Trying to init the node" << std::endl;
+    node->initialize(node);
+    // std::cout << "initialize successful" << std::endl;
+    RCLCPP_INFO(node->get_logger(), "Robot Driver Initialized");
 
     // Run the driver
-    driver.run();
+    node->run(node);  //pass in node param
 
     // RCLCPP_INFO(node->get_logger(), "Mission Accomplished!");
 

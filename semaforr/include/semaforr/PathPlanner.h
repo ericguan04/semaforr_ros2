@@ -96,7 +96,8 @@ public:
  PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
 
  PathPlanner(Graph * g, Node s, Node t, string n): navGraph(g), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
-
+ 
+ PathPlanner(Node s, Node t, string n): source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
   int calcPath(bool cautious = false);
   int calcOrigPath(bool cautious = false);
 

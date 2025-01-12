@@ -518,158 +518,160 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
       // RCLCPP_DEBUG_STREAM(this->get_logger(), "Map dim:" << l << " " << h << " " << p << endl);
     }
   }	
-  Map *map = new Map(l*100, h*100);
-  map->readMapFromXML(map_config);
-  cout << "Finished reading map"<< endl;
-  Graph *origNavGraph = new Graph(map,(int)(p*100.0));
+  // Map *map = new Map(l*100, h*100);
+  // map->readMapFromXML(map_config);
+  // cout << "Finished reading map"<< endl;
+  // Graph *origNavGraph = new Graph(map,(int)(p*100.0));
   //Graph *navGraph = new Graph(map,(int)(p*100.0));
   //cout << "initialized nav graph" << endl;
   //navGraph->printGraph();
   //navGraph->outputGraph();
   Node n;
-  if(distance == 1){
-    Graph *navGraphDistance = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
-    if(skeleton != 1 and hallwayskel != 1 and combined != 1){
-      tier2Planners.push_back(planner);
-    }
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: distance");
-  }
-  if(smooth == 1){
-    Graph *navGraphSmooth = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphSmooth, *map, n,n, "smooth");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: smooth");
-  }
-  if(novel == 1){
-    Graph *navGraphNovel = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphNovel, *map, n,n, "novel");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: novel");
-  }
-  if(density == 1){
-    Graph *navGraphDensity = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphDensity, *map, n,n, "density");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: density");
-  }
-  if(risk == 1){
-    Graph *navGraphRisk = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphRisk, *map, n,n, "risk");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: risk");
-  }
-  if(flow == 1){
-    Graph *navGraphFlow = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphFlow, *map, n,n, "flow");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: flow");
-  }
-  if(combined == 1){
-    Graph *navGraphCombined = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphCombined, *map, n,n, "combined");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: combined");
-  }
-  if(CUSUM == 1){
-    Graph *navGraphCUSUM = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphCUSUM, *map, n,n, "CUSUM");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: CUSUM");
-  }
-  if(discount == 1){
-    Graph *navGraphDiscount = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphDiscount, *map, n,n, "discount");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: discount");
-  }
-  if(explore == 1){
-    Graph *navGraphExplore = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphExplore, *map, n,n, "explore");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: explore");
-  }
-  if(spatial == 1){
-    Graph *navGraphSpatial = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphSpatial, *map, n,n, "spatial");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: spatial");
-  }
-  if(hallwayer == 1){
-    Graph *navGraphHallwayer = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphHallwayer, *map, n,n, "hallwayer");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: hallwayer");
-  }
-  if(trailer == 1){
-    Graph *navGraphTrailer = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphTrailer, *map, n,n, "trailer");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: trailer");
-  }
-  if(barrier == 1){
-    Graph *navGraphBarrier = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphBarrier, *map, n,n, "barrier");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: barrier");
-  }
-  if(conveys == 1){
-    Graph *navGraphConveys = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphConveys, *map, n,n, "conveys");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: conveys");
-  }
-  if(safe == 1){
-    Graph *navGraphSafe = new Graph(map,(int)(p*100.0));
-    cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphSafe, *map, n,n, "safe");
-    tier2Planners.push_back(planner);
-    planner->setOriginalNavGraph(origNavGraph);
-    // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: safe");
-  }
+  // if(distance == 1){
+  //   Graph *navGraphDistance = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
+  //   if(skeleton != 1 and hallwayskel != 1 and combined != 1){
+  //     tier2Planners.push_back(planner);
+  //   }
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: distance");
+  // }
+  // if(smooth == 1){
+  //   Graph *navGraphSmooth = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphSmooth, *map, n,n, "smooth");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: smooth");
+  // }
+  // if(novel == 1){
+  //   Graph *navGraphNovel = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphNovel, *map, n,n, "novel");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: novel");
+  // }
+  // if(density == 1){
+  //   Graph *navGraphDensity = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphDensity, *map, n,n, "density");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: density");
+  // }
+  // if(risk == 1){
+  //   Graph *navGraphRisk = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphRisk, *map, n,n, "risk");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: risk");
+  // }
+  // if(flow == 1){
+  //   Graph *navGraphFlow = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphFlow, *map, n,n, "flow");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: flow");
+  // }
+  // if(combined == 1){
+  //   Graph *navGraphCombined = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphCombined, *map, n,n, "combined");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: combined");
+  // }
+  // if(CUSUM == 1){
+  //   Graph *navGraphCUSUM = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphCUSUM, *map, n,n, "CUSUM");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: CUSUM");
+  // }
+  // if(discount == 1){
+  //   Graph *navGraphDiscount = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphDiscount, *map, n,n, "discount");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: discount");
+  // }
+  // if(explore == 1){
+  //   Graph *navGraphExplore = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphExplore, *map, n,n, "explore");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: explore");
+  // }
+  // if(spatial == 1){
+  //   Graph *navGraphSpatial = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphSpatial, *map, n,n, "spatial");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: spatial");
+  // }
+  // if(hallwayer == 1){
+  //   Graph *navGraphHallwayer = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphHallwayer, *map, n,n, "hallwayer");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: hallwayer");
+  // }
+  // if(trailer == 1){
+  //   Graph *navGraphTrailer = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphTrailer, *map, n,n, "trailer");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: trailer");
+  // }
+  // if(barrier == 1){
+  //   Graph *navGraphBarrier = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphBarrier, *map, n,n, "barrier");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: barrier");
+  // }
+  // if(conveys == 1){
+  //   Graph *navGraphConveys = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphConveys, *map, n,n, "conveys");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: conveys");
+  // }
+  // if(safe == 1){
+  //   Graph *navGraphSafe = new Graph(map,(int)(p*100.0));
+  //   cout << "initialized nav graph" << endl;
+  //   planner = new PathPlanner(navGraphSafe, *map, n,n, "safe");
+  //   tier2Planners.push_back(planner);
+  //   planner->setOriginalNavGraph(origNavGraph);
+  //   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: safe");
+  // }
   if(skeleton == 1){
     Graph *navGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
-    cout << "initialized nav graph" << endl;
+    cout << "initialized nav skeleton graph" << endl;
     PathPlanner *sk_planner = new PathPlanner(navGraphSkeleton, n,n, "skeleton");
+    cout << "sk planner initialzied" << endl;
     tier2Planners.push_back(sk_planner);
     // Graph *origNavGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
-    // sk_planner->setOriginalNavGraph(origNavGraphSkeleton);
-    sk_planner->setOriginalNavGraph(origNavGraph);
+    // * sk_planner->setOriginalNavGraph(origNavGraphSkeleton);
+    // sk_planner->setOriginalNavGraph(origNavGraph);
     // RCLCPP_DEBUG_STREAM(this->get_logger(), "Created planner: skeleton");
   }
+  // Fix the p issue
   if(hallwayskel == 1){
     Graph *navGraphHallwaySkeleton = new Graph((int)(p*100.0), l*100, h*100);
-    cout << "initialized nav graph" << endl;
+    cout << "initialized nav hallway skeleton graph" << endl;
     PathPlanner *hwsk_planner = new PathPlanner(navGraphHallwaySkeleton, n,n, "hallwayskel");
     tier2Planners.push_back(hwsk_planner);
     Graph *origNavGraphHallwaySkeleton = new Graph((int)(p*100.0), l*100, h*100);
@@ -923,7 +925,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   // Initialize the agent's 'beliefs' of the world state with the map and nav
   // graph and spatial models
   beliefs = new Beliefs(l, h, 2, arrMove, arrRotate, moveArrMax, rotateArrMax); // Hunter Fourth
-  
+
   // Initialize advisors and weights from config file
   initialize_advisors(advisor_config);
 

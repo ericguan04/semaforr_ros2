@@ -405,7 +405,7 @@ class Task {
 		cout << "plan generation status" << planner->calcOrigPath(true) << endl;
 
 		list<int> path = planner->getOrigPath();
-		navGraph = planner->getOrigGraph();
+		navGraph = planner->getOrigGraph(); // we don't have to worry about this line
 		list<int>::iterator it;
 		for ( it = path.begin(); it != path.end(); it++ ){
 			double x = navGraph->getNode(*it).getX()/100.0;
