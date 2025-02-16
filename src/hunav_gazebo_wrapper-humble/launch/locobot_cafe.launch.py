@@ -147,7 +147,7 @@ def generate_launch_description():
     locobot_gazebo_launch = PathJoinSubstitution([
         FindPackageShare('interbotix_xslocobot_sim'),
         'launch',
-        'xslocobot.launch.py'
+        'xslocobot_gz_classic.launch.py'
     ])
     # Launch LoCoBot in Gazebo using path to launch file
     locobot_gazebo = IncludeLaunchDescription(
