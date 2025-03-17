@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'openpose_node = openpose_ros.openpose_node:main'
         ],
     },
 )
