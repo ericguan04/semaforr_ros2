@@ -8,6 +8,8 @@ import os
 import glob
 import time
 
+# NOTE: TEST IMAGES TAKEN FROM MPII Human Pose Dataset. Place extracted images in /test_images folder to test. 
+
 class ImagePublisherNode(Node):
     def __init__(self):
         super().__init__('image_publisher')
