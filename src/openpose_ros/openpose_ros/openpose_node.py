@@ -53,11 +53,12 @@ class OpenPoseNode(Node):
         """
         try:
             # Convert ROS Image to OpenCV image
-            cv_image = self.bridge.imgmsg_to_csv2(msg, "bgr8")
+            cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 
             datum = op.Datum()  # Create datum object which is OpenPose's container for data
             datum.cvInputData = cv_image  # Set the input image 
-            self.opWrapper.emplaceAndPop([datum])  # emplaceAndPop method processes the image and gets results stored in datum object
+
+            self.opWrapper.emplaceAndPop(op.VectorDatum([datum]))  # emplaceAndPop method processes the image and gets results stored in datum object
 
             # Create pose message
             pose_array = PoseArray()
