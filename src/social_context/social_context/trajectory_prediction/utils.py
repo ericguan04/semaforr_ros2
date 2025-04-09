@@ -31,7 +31,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from wrapper import CrowdNavPredInterfaceMultiEnv
+from . wrapper import CrowdNavPredInterfaceMultiEnv
 
 # Example raw data with multiple time steps for each environment
 # raw_data = [

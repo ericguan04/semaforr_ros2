@@ -1,7 +1,4 @@
-results/
 datasets/
 logs/
 myenv/
-*.pickle
 *.png
-*.pt

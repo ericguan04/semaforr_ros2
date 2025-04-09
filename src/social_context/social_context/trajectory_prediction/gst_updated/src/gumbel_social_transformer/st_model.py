@@ -6,8 +6,10 @@ that follows spatial -> temporal encoding manners.
 
 import torch
 import torch.nn as nn
+import sys
 
 # from src.social_transformer.social_transformer import SpatialSocialTransformerEncoder
+sys.path.append('/Users/ericguan/Documents/semaforr_ros2/social_context/social_context/trajectory_prediction')
 from gst_updated.src.gumbel_social_transformer.gumbel_social_transformer import GumbelSocialTransformer
 from gst_updated.src.gumbel_social_transformer.temporal_convolution_net import TemporalConvolutionNet
 

@@ -30,7 +30,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from os.path import join, isdir
-from gst_updated.src.gumbel_social_transformer.st_model import st_model
+from . gst_updated.src.gumbel_social_transformer.st_model import st_model
 
 
 

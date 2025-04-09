@@ -13,8 +13,8 @@ Output:
 
 import sys
 sys.path.append('/Users/ericguan/Documents/semaforr_ros2/social_context/social_context/trajectory_prediction')
-from utils import *
-from wrapper import *
+from . utils import *
+from . wrapper import *
 
 def pipeline(raw_data, obs_seq_len, pred_seq_len):
     input_traj, input_binary_mask, id_to_index = preprocess_data(raw_data)
