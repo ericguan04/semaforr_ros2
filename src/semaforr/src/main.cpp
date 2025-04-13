@@ -99,7 +99,7 @@ public:
         cout << "sub_pose successful" << endl;
 
         sub_laser_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            "base_scan", 10, std::bind(&RobotDriver::updateLaserScan, this, std::placeholders::_1));
+            "scan_raw", 10, std::bind(&RobotDriver::updateLaserScan, this, std::placeholders::_1));
         
         cout << "sub_laser successful" << endl;
 
@@ -239,7 +239,7 @@ public:
             std::cout << "within ok() while loop" << std::endl;
             while (init_pos_received == false or init_laser_received == false)
             {
-                RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first message or laser");
+                RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first pose and laser");
                 rate.sleep();
                 rclcpp::spin_some(node_ptr);
                 firstMessageReceived = true;

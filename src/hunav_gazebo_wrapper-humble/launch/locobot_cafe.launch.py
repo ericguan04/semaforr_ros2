@@ -41,6 +41,7 @@ def generate_launch_description():
     use_navgoal = LaunchConfiguration('use_navgoal_to_start')
     navgoal_topic = LaunchConfiguration('navgoal_topic')
     ignore_models = LaunchConfiguration('ignore_models')
+    navigation = LaunchConfiguration('navigation')
 
 
 
@@ -100,6 +101,14 @@ def generate_launch_description():
         'ignore_models', default_value='ground_plane cafe',
         description='list of Gazebo models that the agents should ignore as obstacles as the ground_plane. Indicate the models with a blank space between them'
     )
+    declare_navigation = DeclareLaunchArgument(
+        'navigation', default_value='False',
+        description='If launch the pmb2 navigation system'
+    )
+
+    declare_arg_namespace = DeclareLaunchArgument(
+        'robot_namespace', default_value='',
+        description='The type of robot')
 
 
 
@@ -185,25 +194,22 @@ def generate_launch_description():
         {'ignore_models': ignore_models}]
     )
 
+    static_tf_node = Node(
+        package = "tf2_ros", 
+        executable = "static_transform_publisher",
+        output='screen',
+        arguments = ['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        # other option: arguments = "0 0 0 0 0 0 pmb2 base_footprint".split(' ')
+        condition=UnlessCondition(navigation)
+    )
+
 
 
     # ----------------------------------------------------------
     #       Setup Environment in Gazebo
     # ----------------------------------------------------------
     # Environment variables for Gazebo
-    set_env_gazebo_model = SetEnvironmentVariable(
-        name='GAZEBO_MODEL_PATH', 
-        value=[EnvironmentVariable('GAZEBO_MODEL_PATH'), PathJoinSubstitution([FindPackageShare('hunav_gazebo_wrapper'), 'models'])]
-    )
-    set_env_gazebo_resource = SetEnvironmentVariable(
-        name='GAZEBO_RESOURCE_PATH', 
-        value=[EnvironmentVariable('GAZEBO_RESOURCE_PATH'), PathJoinSubstitution([FindPackageShare('hunav_gazebo_wrapper'), 'models'])]
-    )
-    set_env_gazebo_plugin = SetEnvironmentVariable(
-        name='GAZEBO_PLUGIN_PATH', 
-        value=[EnvironmentVariable('GAZEBO_PLUGIN_PATH'), GazeboRosPaths.get_paths()[1]]
-    )
-
+    
     # Load Gazebo configuration file
     config_file_name = 'params.yaml' 
     pkg_dir = get_package_share_directory('hunav_gazebo_wrapper') 
@@ -223,6 +229,21 @@ def generate_launch_description():
         'GAZEBO_RESOURCE_PATH': media
     }
     print('env:', env)
+
+    set_env_gazebo_model = SetEnvironmentVariable(
+        name='GAZEBO_MODEL_PATH', 
+        value=[EnvironmentVariable('GAZEBO_MODEL_PATH'), PathJoinSubstitution([FindPackageShare('hunav_gazebo_wrapper'), 'models'])]
+    )
+    set_env_gazebo_resource = SetEnvironmentVariable(
+        name='GAZEBO_RESOURCE_PATH', 
+        value=[EnvironmentVariable('GAZEBO_RESOURCE_PATH'), PathJoinSubstitution([FindPackageShare('hunav_gazebo_wrapper'), 'models'])]
+    )
+    set_env_gazebo_plugin = SetEnvironmentVariable(
+        name='GAZEBO_PLUGIN_PATH', 
+        value=[EnvironmentVariable('GAZEBO_PLUGIN_PATH'), GazeboRosPaths.get_paths()[1]]
+    )
+
+
 
     # ----------------------------------------------------------
     #       Setup Gazebo Server and Client
@@ -265,15 +286,19 @@ def generate_launch_description():
     locobot_gazebo_launch = PathJoinSubstitution([
         FindPackageShare('interbotix_xslocobot_sim'),
         'launch',
-        'xslocobot_gz_classic.launch.py'
+        'xslocobot.launch.py'
     ])
+
+    map_dir = get_package_share_directory('hunav_rviz2_panel') 
+    map_path = path.join(map_dir, 'maps', 'map_cafe2.yaml') 
+
     # Launch LoCoBot in Gazebo using path to launch file
     locobot_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([locobot_gazebo_launch]),
         launch_arguments={
             'robot_model': 'locobot_base',
             'use_rviz': 'true',
-            'world_filepath': world_file,
+            'world_filepath': map_path,
             'use_sim_time': 'true'
         }.items(),
     )
@@ -349,6 +374,8 @@ def generate_launch_description():
     ld.add_action(declare_use_navgoal)
     ld.add_action(declare_navgoal_topic)
     ld.add_action(declare_ignore_models)
+    ld.add_action(declare_navigation)
+    ld.add_action(declare_arg_namespace)
 
     # Generate the world with the agents
     # launch hunav_loader and the WorldGenerator 2 seconds later
@@ -362,6 +389,7 @@ def generate_launch_description():
 
     # launch Gazebo safter WorldGenerator
     ld.add_action(gz_launch_event)
+    ld.add_action(static_tf_node)
     
     # Spawn LoCoBot in Gazebo
     ld.add_action(locobot_launch_event)
