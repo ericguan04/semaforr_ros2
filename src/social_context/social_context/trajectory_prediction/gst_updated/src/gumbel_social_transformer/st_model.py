@@ -8,8 +8,10 @@ import torch
 import torch.nn as nn
 import sys
 
+# Resolve Pathing Issues
 # from src.social_transformer.social_transformer import SpatialSocialTransformerEncoder
-sys.path.append('/Users/ericguan/Documents/semaforr_ros2/social_context/social_context/trajectory_prediction')
+#sys.path.append('/Users/ericguan/Documents/semaforr_ros2/social_context/social_context/trajectory_prediction')
+sys.path.insert(0, '/root/semaforr_ros2/src/social_context/social_context/trajectory_prediction')
 from gst_updated.src.gumbel_social_transformer.gumbel_social_transformer import GumbelSocialTransformer
 from gst_updated.src.gumbel_social_transformer.temporal_convolution_net import TemporalConvolutionNet
 
@@ -116,6 +118,8 @@ def negative_log_likelihood_full_partial(gaussian_params, x_target, loss_mask_pe
 
 class st_model(nn.Module):
 
+    # device = 'cuda:0'
+    # device = 'cpu'
     def __init__(self, args, device='cuda:0'):
         """
         Initialize spatial and temporal encoding components.
