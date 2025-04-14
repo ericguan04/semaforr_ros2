@@ -239,7 +239,19 @@ public:
             std::cout << "within ok() while loop" << std::endl;
             while (init_pos_received == false or init_laser_received == false)
             {
-                RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first pose and laser");
+                if (init_laser_received == false and init_pos_received == false)
+                {
+                    RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first pose and laser scan");
+                }
+                else if (init_pos_received == false)
+                {
+                    RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first pose");
+                }
+                else if (init_laser_received == false)
+                {
+                    RCLCPP_INFO(node_ptr->get_logger(), "Waiting for first laser scan");
+                }
+
                 rate.sleep();
                 rclcpp::spin_some(node_ptr);
                 firstMessageReceived = true;
