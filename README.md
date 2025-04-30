@@ -1,14 +1,12 @@
-# SemaFORR ROS2
-A cognitively-based system for social robot navigation
-
-Updated SemaFORR Codebase to ROS2 Framework
-
-Developing Social Context Model to support Social Robot Navigation with SemaFORR
+# Social-SemaFORR
+A cognitively-based system for social robot navigation in ROS2 Humble
 
 To Use:
-* Clone this repository
-* `cd` into the repository
+* Clone this repository in a workspace
+* `cd` into the workspace
 * Run `colcon build`
 
-Additional Dependencies:
+Dependencies:
+* SemaFORR (install as you go)
 * HuNavSim (check their repo)
+* GST Trajectory Prediction (check social_context/README.md)

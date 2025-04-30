@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'social_context_hunav = social_context.social_context_hunav:main',
         ],
     },
 )

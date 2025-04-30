@@ -4,6 +4,8 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 
+# This node bridges the Odometry message from the robot controller to a PoseStamped message for SemaFORR
+# It subscribes to the Odometry topic and publishes the PoseStamped message
 
 class OdomToPoseBridge(Node):
     def __init__(self):

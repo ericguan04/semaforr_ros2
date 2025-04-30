@@ -59,13 +59,15 @@ void Controller::initialize_advisors(string filename){
       else
       {
         advisor_active = false;
-        advisor_weight = atof(vstrings[3].c_str());
-        parameters[0]= atof(vstrings[4].c_str());
-        parameters[1] = atof(vstrings[5].c_str());
-        parameters[2] = atof(vstrings[6].c_str());
-        parameters[3] = atof(vstrings[7].c_str());
-        tier3Advisors.push_back(Tier3Advisor::makeAdvisor(getBeliefs(), advisor_name, advisor_description, advisor_weight, parameters, advisor_active));
-      }
+      }  
+      
+      advisor_weight = atof(vstrings[3].c_str());
+      parameters[0]= atof(vstrings[4].c_str());
+      parameters[1] = atof(vstrings[5].c_str());
+      parameters[2] = atof(vstrings[6].c_str());
+      parameters[3] = atof(vstrings[7].c_str());
+      tier3Advisors.push_back(Tier3Advisor::makeAdvisor(getBeliefs(), advisor_name, advisor_description, advisor_weight, parameters, advisor_active));
+
     }
   }
      
@@ -1015,12 +1017,15 @@ void Controller::updateState(Position current, sensor_msgs::msg::LaserScan laser
     }
     //if task is complete
     if(taskCompleted == true){
+      cout << "Target Achieved, moving on to next target!!" << endl;
       // RCLCPP_DEBUG(this->get_logger(), "Target Achieved, moving on to next target!!");
       //Learn spatial model only on tasks completed successfully
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
         learnSpatialModel(beliefs->getAgentState(), true, false);
+        cout << "Learned spatial model" << endl;
         // RCLCPP_DEBUG(this->get_logger(), "Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
+        cout << "Updated skeleton graph" << endl;
         // RCLCPP_DEBUG(this->get_logger(), "Finished Updating Skeleton Graph!!");
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
@@ -1034,6 +1039,7 @@ void Controller::updateState(Position current, sensor_msgs::msg::LaserScan laser
       beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask(false);
+      cout << "Cleared task" << endl;
       //// RCLCPP_DEBUG(this->get_logger(), "Task Cleared!!");
       //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
       if(beliefs->getAgentState()->getAgenda().size() > 0){
@@ -1042,13 +1048,16 @@ void Controller::updateState(Position current, sensor_msgs::msg::LaserScan laser
         if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
           aStarOn = false;
         }
+        cout << "Selecting Next Task " << endl;
         // RCLCPP_DEBUG(this->get_logger(), "Selecting Next Task");
         if(aStarOn){
           tierTwoDecision(current, true);
+          cout << "Next Plan Generated!!" << endl;
           // RCLCPP_DEBUG(this->get_logger(), "Next Plan Generated!!");
         }
         else{
           beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+          cout << "Next Task Selected!!" << endl;
           // RCLCPP_DEBUG(this->get_logger(), "Next Task Selected!!");
         }
       }
@@ -1099,8 +1108,10 @@ void Controller::updateState(Position current, sensor_msgs::msg::LaserScan laser
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false, false);
+        cout << "Learned spatial model" << endl;
         // RCLCPP_DEBUG(this->get_logger(), "Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
+        cout << "Updated skeleton graph" << endl;
         // RCLCPP_DEBUG(this->get_logger(), "Finished Updating Skeleton Graph!!");
         //beliefs->getAgentState()->skipTask();
         // if(beliefs->getAgentState()->getAllAgenda().size() < planLimit +1){
@@ -1797,28 +1808,28 @@ void Controller::tierThreeDecision(FORRAction *decision){
        
   std::stringstream advisorsList;
   std::stringstream advisorCommentsList;
-  // cout << "processing advisors::"<< endl;
+  cout << "processing advisors::"<< endl;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
-    // cout << advisor->get_name() << endl;
+    cout << advisor->get_name() << endl;
     // check if advisor should make a decision
     advisor->set_commenting();
     if(advisor->is_active() == false){
-      //cout << advisor->get_name() << " is inactive " << endl;
+      cout << advisor->get_name() << " is inactive " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }
     if(advisor->is_commenting() == false){
-      //cout << advisor->get_name() << " is not commenting " << endl;
+      cout << advisor->get_name() << " is not commenting " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }
 
     advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
 
-    // cout << "Before commenting " << endl;
+    cout << "Before commenting " << endl;
     comments = advisor->allAdvice();
-    // cout << "after commenting " << endl;
+    cout << "after commenting " << endl;
     // aggregate all comments
 
     for(mapIt iterator = comments.begin(); iterator != comments.end(); iterator++){
@@ -1834,7 +1845,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
       // }
 
       advisorCommentsList << advisor->get_name() << " " << iterator->first.type << " " << iterator->first.parameter << " " << iterator->second << ";";
-
+      
+      cout << "Start of score aggregation" << endl;
+      
       if( allComments.find(iterator->first) == allComments.end()){
 	    allComments[iterator->first] =  iterator->second * weight;
       }
@@ -1844,25 +1857,26 @@ void Controller::tierThreeDecision(FORRAction *decision){
     }
   } 
   
+  cout << "After score aggregation" << endl;
   // Loop through map advisor created and find command with the highest vote
-  double maxAdviceStrength = -1000;
+  double maxAdviceStrength = -1000.0;
   double maxWeight;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
     double action_weight = 1.0;
-    // cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
+    cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
     if(action_weight * iterator->second > maxAdviceStrength){
       maxAdviceStrength = action_weight * iterator->second;
       maxWeight = action_weight;
     }
   }
-  // cout << "Max vote strength " << maxAdviceStrength << endl;
+  cout << "Max vote strength " << maxAdviceStrength << endl;
   
   for(mapIt iterator = allComments.begin(); iterator!=allComments.end(); iterator++){
     if(maxWeight * iterator->second == maxAdviceStrength)
       best_decisions.push_back(iterator->first);
   }
   
-  // cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
+  cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
   if(best_decisions.size() == 0){
       (*decision) = FORRAction(PAUSE,0);
   }
@@ -1876,7 +1890,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
   (*decision) = best_decisions.at(random_number);
   decisionStats->advisors = advisorsList.str();
   decisionStats->advisorComments = advisorCommentsList.str();
-  //cout << " advisors = " << decisionStats->advisors << "\nadvisorComments = " << decisionStats->advisorComments << endl;
+  cout << " advisors = " << decisionStats->advisors << "\nadvisorComments = " << decisionStats->advisorComments << endl;
 }
 
 

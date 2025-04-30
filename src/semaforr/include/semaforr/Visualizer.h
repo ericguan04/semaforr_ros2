@@ -139,13 +139,16 @@ public:
 	publish_skeleton();
 	publish_trails();
 	publish_doors();
+	cout << "Doors published" << endl;
 	// publish_barriers();
-	publish_walls();
+	// publish_walls(); comment out because we no longer provide a map
+	// cout << "Walls published" << endl;
 	// //publish_occupancy();
 	publish_highway();
 	publish_highway_plan();
 	publish_highway_target();
 	publish_highway_stack();
+	cout << "Highways published" << endl;
   }
 
 
@@ -1271,6 +1274,7 @@ public:
   }
 
   void publish_log(FORRAction decision, double overallTimeSec, double computationTimeSec){
+	cout << "Inside publish decision log!!" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "Inside publish decision log!!");
 	std_msgs::msg::String log;
 	double robotX = beliefs->getAgentState()->getCurrentPosition().getX();
@@ -1315,14 +1319,17 @@ public:
 	laser_pub_->publish(laserScan);
 
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
-	// // RCLCPP_DEBUG(this->get_logger(), "After max_forward");
+	cout << "After max_forward" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
 	list<Task*>& agenda = beliefs->getAgentState()->getAgenda();
 	list<Task*>& all_agenda = beliefs->getAgentState()->getAllAgenda();
-	// // RCLCPP_DEBUG(this->get_logger(), "After all_agenda");
+	cout << "After all_agenda" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After all_agenda");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	vector< vector< CartesianPoint> > trails =  beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-	// // RCLCPP_DEBUG(this->get_logger(), "After trails");
+	cout << "After trails" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
 	double decisionTier = con->getCurrentDecisionStats()->decisionTier;
@@ -1340,7 +1347,8 @@ public:
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 
-	// // RCLCPP_DEBUG(this->get_logger(), "After decision statistics");
+	cout << "After decision statistics" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After decision statistics");
 	int decisionCount = -1;
 	int currentTask = -1;
 	if(!agenda.empty()){
@@ -1348,7 +1356,8 @@ public:
   		//if(currentTask != 0)
 		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
-	// // RCLCPP_DEBUG(this->get_logger(), "After decisionCount");
+	cout << "After decisionCount" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After decisionCount");
 
 	cout << "Current task " << currentTask << " and decision number " << decisionCount << " with overall time " << overallTimeSec << " and computation time " << computationTimeSec << endl;
 
@@ -1358,7 +1367,8 @@ public:
  		double y = laserEndpoints[i].get_y();
 		lep << x << "," << y << ";";
 	}
-	// // RCLCPP_DEBUG(this->get_logger(), "After laserEndpoints");
+	cout << "After laserEndpoints" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After laserEndpoints");
 
 
 	std::stringstream ls;
@@ -1370,7 +1380,8 @@ public:
 		}
 		ls << length << ",";
 	}
-	// // RCLCPP_DEBUG(this->get_logger(), "After laserScan");
+	cout << "After laserScan" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After laserScan");
 	/*int totalSize = 0;
 	for(int i = 0; i < allTrace.size(); i++){
 		totalSize += allTrace[i].size();
@@ -1386,7 +1397,8 @@ public:
 		}
 		regionsstream << ";";
 	}
-	// // RCLCPP_DEBUG(this->get_logger(), "After regions");
+	cout << "After regions" << endl;
+	// RCLCPP_DEBUG(this->get_logger(), "After regions");
 
 
 	std::stringstream trailstream;
@@ -1396,7 +1408,7 @@ public:
 		}
 		trailstream << ";";
 	}
-	// // RCLCPP_DEBUG(this->get_logger(), "After trails");
+	// RCLCPP_DEBUG(this->get_logger(), "After trails");
 
 	std::stringstream conveyorStream;
 	for(int j = 0; j < conveyors.size()-1; j++){

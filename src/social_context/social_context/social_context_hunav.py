@@ -5,7 +5,8 @@ from hunav_msgs.msg import Agents
 from collections import deque
 import time
 
-from collections import defaultdict # might need to use default dict
+import sys
+sys.path.append('/root/semaforr_ros2/src/social_context/social_context')
 from trajectory_prediction.pipeline import pipeline
 
 # Specifically for HunNavSim - this is for testing the social context model

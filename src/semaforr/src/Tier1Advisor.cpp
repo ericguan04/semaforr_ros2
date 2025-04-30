@@ -165,6 +165,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
     bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
     if(waypointInSight == true){
+      cout << "Waypoint in sight, Enforcer advisor active" << endl;
       // RCLCPP_DEBUG(this->get_logger(), "Waypoint in sight , Enforcer advisor active");
       (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
       if(decision->parameter != 0){
@@ -176,12 +177,14 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
           if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
             if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+              cout << "Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision" << endl;
               // RCLCPP_DEBUG(this->get_logger(), "Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
               decisionMade = true;
             }
             else{
               FORRAction forward = beliefs->getAgentState()->maxForwardAction();
               if(forward.parameter >= decision->parameter){
+                cout << "Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision" << endl;
                 // RCLCPP_DEBUG(this->get_logger(), "Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
                 decisionMade = true;
               }

@@ -276,8 +276,10 @@ public:
                 gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
+                cout << "Updated state" << endl;
 				// ROS_DEBUG("Finished UpdateState");
 				viz_->publish();
+                cout << "Published publication" << endl;
 				// ROS_DEBUG("Finished Publish");
 				previous = current;
 				//ROS_DEBUG("Check if mission is complete");

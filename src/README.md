@@ -1,6 +1,7 @@
-# SemaFORR ROS2
-A cognitively-based system for robot navigation
+# Social-SemaFORR Packages
+This is the src folder, containing all the packages used by SemaFORR
 
-Updated SemaFORR Codebase to ROS2 Framework
-
-Developing Social Context Model to support Social Robot Navigation with SemaFORR
+Available Packages:
+* `semaforr`: semaforr navigation system
+* `semaforr_bridge`: bridge nodes for semaforr communication
+* `social_context`: semaforr social context model
