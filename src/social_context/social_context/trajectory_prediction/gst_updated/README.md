@@ -1,4 +1,6 @@
 # gst
+**IMPORTANT**: This README file was created by the researchers cited in the previous directory. Read this only if you want a deeper dive into the model. Otherwise, stick to the high level fucntions.
+
 Gumbel Social Transformer trained with data provided in Nov, 2021 by Shuijing.
 
 ## How to set up

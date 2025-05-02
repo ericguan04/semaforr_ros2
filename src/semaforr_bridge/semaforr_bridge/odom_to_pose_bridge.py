@@ -30,6 +30,8 @@ class OdomToPoseBridge(Node):
         pose_stamped = PoseStamped()
         pose_stamped.header = msg.header  # preserves timestamp and frame_id (e.g., 'odom')
         pose_stamped.pose = msg.pose.pose  # extract just the pose
+        pose_stamped.pose.position.x += 100
+        pose_stamped.pose.position.y += 100
 
         self.publisher.publish(pose_stamped)
 

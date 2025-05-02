@@ -2127,9 +2127,12 @@ double Tier3ConveyLinear::actionComment(FORRAction action){
 
 void Tier3ConveyLinear::set_commenting(){
   set<int> grid_values;
+  cout << "set commenting for conveylinear" << endl;
   set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+  cout << "after vetoactions" << endl;
   set<FORRAction> *action_set;
   action_set = beliefs->getAgentState()->getActionSet();
+  cout << "after actionset" << endl;
   FORRAction forrAction;
   set<FORRAction>::iterator actionIter;
   for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
@@ -2138,7 +2141,9 @@ void Tier3ConveyLinear::set_commenting(){
     if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
       continue;
     Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    cout << "after get expected position" << expectedPosition.getX() << " " << expectedPosition.getY() << endl;
     int grid_value = beliefs->getSpatialModel()->getConveyors()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
+    cout << "after get grid value" << endl;
     if(grid_value > 1)
       grid_values.insert(grid_value);
   }
