@@ -8,5 +8,4 @@ To Use:
 
 Dependencies:
 * SemaFORR (install as you go)
-* HuNavSim (check their repo)
 * GST Trajectory Prediction (check social_context/README.md)
