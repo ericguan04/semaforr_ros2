@@ -16,6 +16,13 @@ class CoordinateListener(Node):
     def __init__(self):
         super().__init__('coordinate_listener')
 
+        # How often to read the /human_states topic
+        self._read_interval = 5.0
+        self._last_read_time = 0.0
+
+        # Number of time steps before making a prediction
+        self._prediction_steps = 3        
+
         # Subscribe to /human_states
         self.human_states_subscriber = self.create_subscription(
             Agents,
@@ -31,61 +38,71 @@ class CoordinateListener(Node):
             10
         )
 
-        # Internal model: stores pose history + predictions per agent
+        # The Social Context Model: stores pose history + predictions for each agent
         self.social_context_model = {}
-
-        # Timer: checks every 2s if it's time to predict
-        self.create_timer(2.0, self.make_predictions)
 
         self.get_logger().info("CoordinateListener listening to /human_states")
 
     def human_states_callback(self, msg):
         timestamp = time.time()
+        # If it's been less than _read_interval seconds since last read, skip
+        if timestamp - self._last_read_time < self._read_interval:
+            return
+        self._last_read_time = timestamp
 
+        self.get_logger().info(f"processing /human_states at {timestamp:.1f}")
+
+        # Process the Agents message and add to the social context model
         for agent in msg.agents:
             agent_id = str(agent.id)
             pos = (agent.position.position.x, agent.position.position.y)
 
             if agent_id not in self.social_context_model:
                 self.social_context_model[agent_id] = {
-                    "history": deque(maxlen=3),
-                    "timestamps": deque(maxlen=3),
+                    "history": deque(maxlen=self._prediction_steps), # automatically removes oldest entry (limit of 3)
+                    "timestamps": deque(maxlen=self._prediction_steps), # automatically removes oldest entry (limit of 3) / timestamps can be removed (just for debugging)
                     "predictions": []
                 }
 
             self.social_context_model[agent_id]["history"].append(pos)
             self.social_context_model[agent_id]["timestamps"].append(timestamp)
+        
+        # Debugging: print the social context model
+        print(self.social_context_model)
+        
+        # Make predictions if we have enough data
+        self.make_predictions()
 
     def make_predictions(self):
+        # Convert social_context_model to a list of dictionaries (input format for deep learning model) if we have enough data
         raw_data = []
 
         for agent_id, data in self.social_context_model.items():
-            if len(data["history"]) == 3 and self.valid_intervals(data["timestamps"]):
+            if len(data["history"]) == self._prediction_steps:
                 raw_data.append({
                     'id': agent_id,
                     'coords': list(data["history"])
                 })
 
+        # Skip if not enough data
         if not raw_data:
-            return  # No valid sequences yet
+            self.get_logger().info("Not enough data to make predictions")
+            return
 
-        # Call DL model here (replace with your real pipeline)
-        predictions = pipeline([raw_data], input_len=3, pred_len=3)
+        # With the processed raw_data, make predictions
+        predictions = pipeline([raw_data], self._prediction_steps, self._prediction_steps)
 
+        # Save predictions back to social_context_model
         for agent_id, coords in predictions.items():
             self.social_context_model[agent_id]["predictions"] = coords
 
             for coord in coords:
+                # Publish each prediction as a PoseStamped message
                 self.publish_pose_stamped(agent_id, coord)
 
-    def valid_intervals(self, timestamps):
-        """Ensure samples are ~2s apart"""
-        if len(timestamps) != 3:
-            return False
-        t0, t1, t2 = timestamps
-        return (1.5 <= t1 - t0 <= 2.5) and (1.5 <= t2 - t1 <= 2.5)
-
     def publish_pose_stamped(self, agent_id, coord):
+        # Convert the predicted coordinates to a PoseStamped message and publish
+        # Change this to anything else if you want to publish something else
         pose_msg = PoseStamped()
         pose_msg.header.frame_id = str(agent_id)
         pose_msg.header.stamp = self.get_clock().now().to_msg()
@@ -95,6 +112,7 @@ class CoordinateListener(Node):
 
         self.pose_publisher.publish(pose_msg)
         self.get_logger().info(f"Published prediction for agent {agent_id}")
+
 
 def main(args=None):
     rclpy.init(args=args)
