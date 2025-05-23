@@ -20,6 +20,7 @@ Position AgentState::getExpectedPositionAfterAction(FORRAction action){
   int intensity = action.parameter;
   FORRActionType type = action.type;
   Position initialPosition = getCurrentPosition();
+  cout << "Agent initial position: " << initialPosition.getX() << " " << initialPosition.getY() << " " << initialPosition.getTheta() << endl;
   
   switch(type){
   case FORWARD:

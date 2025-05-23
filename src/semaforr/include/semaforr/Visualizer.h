@@ -1408,6 +1408,7 @@ public:
 		}
 		trailstream << ";";
 	}
+	cout << "After trails" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After trails");
 
 	std::stringstream conveyorStream;
@@ -1417,6 +1418,7 @@ public:
 		}
 		conveyorStream << ";";
 	}
+	cout << "After conveyors" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After conveyors");
 	
 
@@ -1427,7 +1429,7 @@ public:
 		}
 		doorStream << ";";
 	}
-
+	cout << "After doors" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After doors");
 
 	std::stringstream hallwayStream;
@@ -1439,7 +1441,7 @@ public:
 		}
 		hallwayStream << ";";
 	}
-
+	cout << "After hallways" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After hallways");
 
 	std::stringstream planStream;
@@ -1457,6 +1459,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//planStream << "\t" << plancost;
 	}
+	cout << "After planStream" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After planStream");
 
 	std::stringstream origPlanStream;
@@ -1474,6 +1477,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//origPlanStream << "\t" << plancost;
 	}
+	cout << "After origPlanStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After origPlanStream");
 
 	std::stringstream crowdStream;
@@ -1484,6 +1488,7 @@ public:
 		<< " " << crowdpose.poses[i].orientation.y << " " << crowdpose.poses[i].orientation.z << " " << crowdpose.poses[i].orientation.w;
 		crowdStream << ";";
 	}
+	cout << "After crowdStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After crowdStream");
 
 	std::stringstream allCrowdStream;
@@ -1494,94 +1499,95 @@ public:
 		<< " " << crowdposeall.poses[i].orientation.y << " " << crowdposeall.poses[i].orientation.z << " " << crowdposeall.poses[i].orientation.w;
 		allCrowdStream << ";";
 	}
+	cout << "After allCrowdStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After all crowdStream");
 
-	std::stringstream crowdModel;
-	semaforr__msg__CrowdModel model = con->getPlanner()->getCrowdModel();
-	int resolution = model.resolution;
-	int height = model.height;
-	int width = model.width;
-	std::vector<double> densities(
-		model.densities.data, 
-		model.densities.data + model.densities.size
-	);
-	std::vector<double> risk(
-		model.risk.data, 
-		model.risk.data + model.risk.size
-	);
-	crowdModel << height << " " << width << " " << resolution << ";";
-	for(int i = 0; i < densities.size() ; i++){
-		crowdModel << densities[i] << " ";
-	}
-	crowdModel << "\t";
-	for(int i = 0; i < risk.size() ; i++){
-		crowdModel << risk[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> left(
-		model.left.data, 
-		model.left.data + model.left.size
-	);
-	for(int i = 0; i < left.size() ; i++){
-		crowdModel << left[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> right(
-		model.right.data, 
-		model.right.data + model.right.size
-	);
-	for(int i = 0; i < right.size() ; i++){
-		crowdModel << right[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> up(
-		model.up.data, 
-		model.up.data + model.up.size
-	);
-	for(int i = 0; i < up.size() ; i++){
-		crowdModel << up[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> down(
-		model.down.data, 
-		model.down.data + model.down.size
-	);
-	for(int i = 0; i < down.size() ; i++){
-		crowdModel << down[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> up_left(
-		model.up_left.data, 
-		model.up_left.data + model.up_left.size
-	);
-	for(int i = 0; i < up_left.size() ; i++){
-		crowdModel << up_left[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> up_right(
-		model.up_right.data, 
-		model.up_right.data + model.up_right.size
-	);
-	for(int i = 0; i < up_right.size() ; i++){
-		crowdModel << up_right[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> down_left(
-		model.down_left.data, 
-		model.down_left.data + model.down_left.size
-	);
-	for(int i = 0; i < down_left.size() ; i++){
-		crowdModel << down_left[i] << " ";
-	}
-	crowdModel << "\t";
-	std::vector<double> down_right(
-		model.down_right.data, 
-		model.down_right.data + model.down_right.size
-	);
-	for(int i = 0; i < down_right.size() ; i++){
-		crowdModel << down_right[i] << " ";
-	}
-
+	// std::stringstream crowdModel;
+	// semaforr__msg__CrowdModel model = con->getPlanner()->getCrowdModel();
+	// int resolution = model.resolution;
+	// int height = model.height;
+	// int width = model.width;
+	// std::vector<double> densities(
+	// 	model.densities.data, 
+	// 	model.densities.data + model.densities.size
+	// );
+	// std::vector<double> risk(
+	// 	model.risk.data, 
+	// 	model.risk.data + model.risk.size
+	// );
+	// crowdModel << height << " " << width << " " << resolution << ";";
+	// for(int i = 0; i < densities.size() ; i++){
+	// 	crowdModel << densities[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// for(int i = 0; i < risk.size() ; i++){
+	// 	crowdModel << risk[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> left(
+	// 	model.left.data, 
+	// 	model.left.data + model.left.size
+	// );
+	// for(int i = 0; i < left.size() ; i++){
+	// 	crowdModel << left[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> right(
+	// 	model.right.data, 
+	// 	model.right.data + model.right.size
+	// );
+	// for(int i = 0; i < right.size() ; i++){
+	// 	crowdModel << right[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> up(
+	// 	model.up.data, 
+	// 	model.up.data + model.up.size
+	// );
+	// for(int i = 0; i < up.size() ; i++){
+	// 	crowdModel << up[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> down(
+	// 	model.down.data, 
+	// 	model.down.data + model.down.size
+	// );
+	// for(int i = 0; i < down.size() ; i++){
+	// 	crowdModel << down[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> up_left(
+	// 	model.up_left.data, 
+	// 	model.up_left.data + model.up_left.size
+	// );
+	// for(int i = 0; i < up_left.size() ; i++){
+	// 	crowdModel << up_left[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> up_right(
+	// 	model.up_right.data, 
+	// 	model.up_right.data + model.up_right.size
+	// );
+	// for(int i = 0; i < up_right.size() ; i++){
+	// 	crowdModel << up_right[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> down_left(
+	// 	model.down_left.data, 
+	// 	model.down_left.data + model.down_left.size
+	// );
+	// for(int i = 0; i < down_left.size() ; i++){
+	// 	crowdModel << down_left[i] << " ";
+	// }
+	// crowdModel << "\t";
+	// std::vector<double> down_right(
+	// 	model.down_right.data, 
+	// 	model.down_right.data + model.down_right.size
+	// );
+	// for(int i = 0; i < down_right.size() ; i++){
+	// 	crowdModel << down_right[i] << " ";
+	// }
+	// cout << "After crowdModel" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After all crowd model");
 
 	std::stringstream passageStream;
@@ -1618,7 +1624,7 @@ public:
 	else{
 		passageStream << " ";
 	}
-
+	cout << "After passageStream" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After conveyors");
 
 	std::stringstream output;
