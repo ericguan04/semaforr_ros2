@@ -1,0 +1,16 @@
+services:
+  ros2:
+    build: .
+    container_name: ros2_humble_container
+    image: ros2:humble
+    tty: true
+    stdin_open: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - .:/workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    working_dir: /workspace
+
