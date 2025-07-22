@@ -23,6 +23,7 @@ setup(
             'social_context_hunav = social_context.social_context_hunav:main',
             'image_publisher = social_context.pose_estimation.image_publisher:main',
             'openpose_node = social_context.pose_estimation.openpose_node:main',
+            '3d_pose_localizer = social_context.pose_estimation.3d_pose_localizer:main',
         ],
     },
 )
