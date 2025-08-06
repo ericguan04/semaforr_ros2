@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+    <world name="minimal_test">
+        <!-- Absolute minimum plugins -->
+        <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics"/>
+
+        <physics type="ode">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1</real_time_factor>
+        </physics>
+
+        <!-- Just a ground plane -->
+        <model name="ground">
+            <static>true</static>
+            <link name="link">
+                <collision name="collision">
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>10 10</size>
+                        </plane>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <!-- Simple box to test physics -->
+        <model name="box">
+            <pose>0 0 0.5 0 0 0</pose>
+            <link name="link">
+                <inertial>
+                    <mass>1.0</mass>
+                </inertial>
+                <collision name="collision">
+                    <geometry>
+                        <box>
+                            <size>1 1 1</size>
+                        </box>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+    </world>
+</sdf>
