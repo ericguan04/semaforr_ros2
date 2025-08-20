@@ -188,6 +188,7 @@ source install/setup.bash
 
 The system has been integrated with the HuNav (Human Navigation) simulator for realistic testing and development of social navigation algorithms.
 
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Docker Container                        │
 │  ┌─────────────────┐    ┌─────────────────┐               │
@@ -208,6 +209,7 @@ The system has been integrated with the HuNav (Human Navigation) simulator for r
 │  │  - 2D poses     │    │  - 3D positions │               │
 │  └─────────────────┘    └─────────────────┘               │
 └─────────────────────────────────────────────────────────────┘
+```
 
 ### HuNav Setup
 
