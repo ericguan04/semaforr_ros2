@@ -44,7 +44,8 @@ class OpenPoseNode(Node):
         self.pose_pub = self.create_publisher(PoseArray, 'human_poses', 10)
         self.image_sub = self.create_subscription(
             Image,
-            'camera/image_raw',  # TODO: Change topic name to the actual topic we use
+            # 'camera/image_raw',  # TODO: Change topic name to the actual topic we use
+            '/rgb_camera_frame_sensor/image_raw',
             self.image_callback,
             10
         )
