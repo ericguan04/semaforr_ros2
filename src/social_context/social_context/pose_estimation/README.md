@@ -7,10 +7,9 @@ This module contains code for estimating human poses from sensor data (camera, l
 Currently, the pose estimation system centers around the **OpenPose Node**, which processes camera images and detects human body position poses using the OpenPose library. 
 
 **Core Component:**
-- **OpenPose Node**: Processes live camera data and publishes human pose detections
-
-**Testing Component:**
-- **Image Publisher**: A testing utility that publishes static test images to simulate camera input during development
+- **OpenPose Node**: Processes live camera data and publishes human pose detections in 2D pixel coordinates
+- **Human 3D LiDAR Fusion Node**: Combines 2D pose detections with LiDAR data to produce 3D human positions for navigation
+- **Image Publisher**: A testing utility that publishes static test images to simulate camera input during development (lightweight alternative to using HuNav simulator)
 
 ## Prerequisites
 
@@ -184,3 +183,87 @@ file src/social_context/social_context/pose_estimation/test_images/*
 colcon build --packages-select social_context --cmake-clean-cache
 source install/setup.bash
 ```
+
+## Working with HuNav Simulator 
+
+The system has been integrated with the HuNav (Human Navigation) simulator for realistic testing and development of social navigation algorithms.
+
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Container                        │
+│  ┌─────────────────┐    ┌─────────────────┐               │
+│  │  HuNav Simulator│    │  ROS2 Topics    │               │
+│  │  - Gazebo 11    │───▶│  - /rgb_camera_ │               │
+│  │  - Human agents │    │    frame_sensor │               │
+│  │  - PMB2 robot   │    │  - /scan_raw    │               │
+│  └─────────────────┘    └─────────────────┘               │
+└─────────────────────────────────────────────────────────────┘
+                                   │
+                          ROS2 Domain Communication
+                                   │
+┌─────────────────────────────────────────────────────────────┐
+│                    Local Development                       │
+│  ┌─────────────────┐    ┌─────────────────┐               │
+│  │   OpenPose      │    │   LiDAR Fusion  │               │
+│  │   Node          │───▶│   Node          │               │
+│  │  - 2D poses     │    │  - 3D positions │               │
+│  └─────────────────┘    └─────────────────┘               │
+└─────────────────────────────────────────────────────────────┘
+
+### HuNav Setup
+
+1. **Launch HuNav Simulator** (in Docker container):
+
+```bash
+git clone https://github.com/robotics-upo/hunavsim_containers
+cd hunavsim_containers
+```
+
+Please follow the instructions at [https://github.com/robotics-upo/hunavsim_containers]. We used Option 1 - HuNavSim + Gazebo Classic 11 + ROS 2 Humble + PAL PMB2 robot.
+
+2. **Verify Available Topics**:
+```bash
+ros2 topic list
+# Key topics:
+# - /rgb_camera_frame_sensor/image_raw (RGB camera)
+# - /rgb_camera_frame_sensor/camera_info (camera calibration)
+# - /scan_raw (LiDAR data)
+```
+
+3. **Run Complete Pipeline**:
+```bash
+# Terminal 1: OpenPose node
+export OPENPOSE_PATH="/path/to/your/openpose"
+ros2 run social_context openpose_node
+
+# Terminal 2: 3D fusion node
+ros2 run social_context human_3d_lidar_fusion_node
+
+# Terminal 3: Monitor 3D output
+ros2 topic echo /human_poses_3d
+```
+
+### Key Topics in HuNav Integration
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/rgb_camera_frame_sensor/image_raw` | sensor_msgs/Image | RGB camera feed from simulator |
+| `/rgb_camera_frame_sensor/camera_info` | sensor_msgs/CameraInfo | Camera calibration parameters |
+| `/scan_raw` | sensor_msgs/LaserScan | 2D LiDAR data |
+| `/human_poses` | geometry_msgs/PoseArray | 2D human detections (pixels) |
+| `/human_poses_3d` | geometry_msgs/PoseArray | 3D human positions (meters) |
+
+### Expected Behavior
+
+- **Empty poses when no humans visible**: `poses: []` is normal output if there are no humans in the camera's view
+- **2D detections**: Pixel coordinates (e.g., x: 320.5, y: 240.8)  
+- **3D positions**: World coordinates in meters (e.g., x: 2.5, y: -1.2, z: 0.0)
+
+## Prerequisites
+
+### System Requirements
+- ROS2 Humble (or compatible version)
+- Python 3.10
+- OpenCV
+- NumPy < 2.0 (important for cv_bridge compatibility)
+- Test images from MPII Human Pose Dataset
+
