@@ -4,10 +4,7 @@ This module contains code for estimating human poses from sensor data (camera, l
 
 ## Overview
 
-Currently, the pose estimation system consists of a node for 3D pose localization (estimating the 3D coordinates of different poses in the environment), and 2D pose detection (using OpenPose to detect pose information in the camera's view):
-
-**Primary Component (Recommended):**
-- **3D Pose Localizer (MediaPipe)**: Processes live camera data and directly outputs 3D human poses using Google's MediaPipe library. Provides real-world coordinates in meters.
+Currently, the pose estimation system consists of an OpenPose node for 2D pose detection (using OpenPose to detect pose information in the camera's view):
 
 **Alternative Component:**
 - **OpenPose Node**: Processes camera images and detects detailed 2D human body keypoints using OpenPose. Useful for downstream tasks.
