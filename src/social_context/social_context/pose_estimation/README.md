@@ -220,7 +220,9 @@ git clone https://github.com/robotics-upo/hunavsim_containers
 cd hunavsim_containers
 ```
 
-Please follow the instructions at [https://github.com/robotics-upo/hunavsim_containers]. We used Option 1 - HuNavSim + Gazebo Classic 11 + ROS 2 Humble + PAL PMB2 robot.
+Please follow the instructions at https://github.com/robotics-upo/hunavsim_containers. 
+
+We used Option 1 - HuNavSim + Gazebo Classic 11 + ROS 2 Humble + PAL PMB2 robot.
 
 2. **Verify Available Topics**:
 ```bash
