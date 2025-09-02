@@ -17,36 +17,18 @@ class Human3DLidarFusionNode(Node):
     def __init__(self):
         super().__init__('human_3d_lidar_fusion')
 
-        # Parameters
-        self.declare_parameter('camera_info_topic', '/rgb_camera_frame_sensor/camera_info')
-        self.declare_parameter('lidar_topic', '/scan_raw')
-        self.declare_parameter('poses_2d_topic', 'human_poses')
+        self.declare_parameter('camera_info_topic', '/rgb_camera_frame_sensor/camera_info') # Where to get camera calibration data (the expected topic is '/rgb_camera_frame_sensor/camera_info')
+        self.declare_parameter('lidar_topic', '/scan_raw') # Where to get LiDAR scan data (the expected topic is '/scan_raw')
+        self.declare_parameter('poses_2d_topic', 'human_poses') # Where to get 2D human poses from OpenPose (the expected topic is 'human_poses')
+
         self.declare_parameter('max_sync_delay', 0.1)  # 100ms max delay between messages
 
         self.camera_info = None
 
-        # Publishers
         self.pose_3d_pub = self.create_publisher(PoseArray, 'human_poses_3d', 10)
-
-        # Camera info subscriber
-        self.camera_info_sub = self.create_subscription(
-            CameraInfo,
-            self.get_parameter('camera_info_topic').get_parameter_value().string_value,
-            self.camera_info_callback,
-            10
-        )
-
-        # Synchronized subscribers for poses and LiDAR scan
-        self.pose_sub = Subscriber(
-            self,
-            PoseArray,
-            self.get_parameter('poses_2d_topic').get_parameter_value().string_value
-        )
-        self.lidar_sub = Subscriber(
-            self,
-            LaserScan,
-            self.get_parameter('lidar_topic').get_parameter_value().string_value
-        )
+        self.camera_info_sub = self.create_subscription(CameraInfo, self.get_parameter('camera_info_topic').get_parameter_value().string_value, self.camera_info_callback, 10)
+        self.pose_sub = Subscriber(self, PoseArray, self.get_parameter('poses_2d_topic').get_parameter_value().string_value)
+        self.lidar_sub = Subscriber(self, LaserScan, self.get_parameter('lidar_topic').get_parameter_value().string_value)
 
         # Synchronize topics
         max_delay = self.get_parameter('max_sync_delay').get_parameter_value().double_value
@@ -73,31 +55,23 @@ class Human3DLidarFusionNode(Node):
             return
 
         try:
-            # Create output message
             poses_3d = PoseArray()
             poses_3d.header = pose_msg.header
             poses_3d.header.frame_id = 'base_laser_link'  # LiDAR frame
 
-            # Process each detected person
             for pose_2d in pose_msg.poses:
-                # Convert 2D pixel coordinates to camera ray
                 pixel_x = pose_2d.position.x
                 pixel_y = pose_2d.position.y
 
-                # Convert pixel to horizontal camera angle
                 camera_angle = self.pixel_to_camera_angle(pixel_x)
-
-                # Find corresponding LiDAR range measurement
                 lidar_range = self.get_lidar_range_at_angle(camera_angle, lidar_msg)
 
                 if lidar_range is not None:
-                    # Convert to 3D point in LiDAR frame
                     pose_3d = self.create_3d_pose(camera_angle, lidar_range)
 
                     if pose_3d is not None:
                         poses_3d.poses.append(pose_3d)
 
-            # Publish 3D poses
             self.pose_3d_pub.publish(poses_3d)
 
             if len(poses_3d.poses) > 0:
@@ -110,12 +84,12 @@ class Human3DLidarFusionNode(Node):
         """
         Convert pixel x-coordinate to horizontal camera angle.
         Assumes camera and LiDAR are roughly aligned horizontally.
+        This
         """
-        # Camera intrinsic parameters
-        fx = self.camera_info.k[0]  # Focal length x
-        cx = self.camera_info.k[2]  # Principal point x
+        fx = self.camera_info.k[0]  # Focal length x (how much does the camera zoom?)
+        cx = self.camera_info.k[2]  # Principal point x (which x coordinate is the center of the camera?)
 
-        # Convert pixel to horizontal angle (radians)
+        # Use the camera information to convert the given pixel_x to a horizontal camera angle (radians)
         # Positive angle = right, negative = left
         angle = math.atan2(pixel_x - cx, fx)
 
@@ -132,12 +106,10 @@ class Human3DLidarFusionNode(Node):
         Returns:
             Range value (meters) or None if no valid measurement
         """
-        # Convert camera angle to LiDAR angle coordinate system
-        # This assumes camera and LiDAR are roughly aligned
-        # You may need to adjust this transformation based on your robot setup
+
+        # Convert camera angle to LiDAR angle coordinate system (this assumes camera and LiDAR are roughly aligned)
         lidar_angle = target_angle
 
-        # Check if angle is within LiDAR field of view
         if lidar_angle < lidar_msg.angle_min or lidar_angle > lidar_msg.angle_max:
             return None
 
@@ -185,13 +157,11 @@ class Human3DLidarFusionNode(Node):
             y = distance * math.sin(angle)  # Lateral distance
             z = 0.0  # Assume humans are on ground plane
 
-            # Create pose message
             pose_3d = Pose()
             pose_3d.position.x = float(x)
             pose_3d.position.y = float(y)
             pose_3d.position.z = float(z)
 
-            # Set orientation (no orientation info from 2D pose)
             pose_3d.orientation.w = 1.0
             pose_3d.orientation.x = 0.0
             pose_3d.orientation.y = 0.0
