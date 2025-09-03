@@ -22,9 +22,8 @@ setup(
         'console_scripts': [
             'social_context_hunav = social_context.social_context_hunav:main',
             'image_publisher = social_context.pose_estimation.image_publisher:main',
-            'human_3d_lidar_fusion_node = social_context.pose_estimation.human_3d_lidar_fusion_node:main',
-            'openpose_node = social_context.pose_estimation.openpose_node:main',
-            'pose_localizer_3d = social_context.pose_estimation.3d_pose_localizer:main',
+            'human_3d_lidar_fusion_node = social_context.pose_estimation.src.human_3d_lidar_fusion_node:main',
+            'openpose_node = social_context.pose_estimation.src.openpose_node:main'
         ],
     },
 )
