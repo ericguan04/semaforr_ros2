@@ -80,20 +80,20 @@ class Human3DLidarFusionNode(Node):
         except Exception as e:
             self.get_logger().error(f'Error in LiDAR fusion: {str(e)}')
 
-    def pixel_to_camera_angle(self, pixel_x):
-        """
-        Convert pixel x-coordinate to horizontal camera angle.
-        Assumes camera and LiDAR are roughly aligned horizontally.
-        This
-        """
-        fx = self.camera_info.k[0]  # Focal length x (how much does the camera zoom?)
-        cx = self.camera_info.k[2]  # Principal point x (which x coordinate is the center of the camera?)
-
-        # Use the camera information to convert the given pixel_x to a horizontal camera angle (radians)
-        # Positive angle = right, negative = left
-        angle = math.atan2(pixel_x - cx, fx)
-
-        return angle
+    # def pixel_to_camera_angle(self, pixel_x):
+    #     """
+    #     Convert pixel x-coordinate to horizontal camera angle.
+    #     Assumes camera and LiDAR are roughly aligned horizontally.
+    #     This
+    #     """
+    #     fx = self.camera_info.k[0]  # Focal length x (how much does the camera zoom?)
+    #     cx = self.camera_info.k[2]  # Principal point x (which x coordinate is the center of the camera?)
+    #
+    #     # Use the camera information to convert the given pixel_x to a horizontal camera angle (radians)
+    #     # Positive angle = right, negative = left
+    #     angle = math.atan2(pixel_x - cx, fx)
+    #
+    #     return angle
 
     def get_lidar_range_at_angle(self, target_angle, lidar_msg):
         """
@@ -139,39 +139,39 @@ class Human3DLidarFusionNode(Node):
 
         return None
 
-    def create_3d_pose(self, angle, distance):
-        """
-        Create 3D pose from horizontal angle and distance.
-
-        Args:
-            angle: Horizontal angle (radians)
-            distance: Distance from LiDAR (meters)
-
-        Returns:
-            Pose message with 3D position
-        """
-        try:
-            # Convert polar to Cartesian coordinates
-            # LiDAR coordinate system: x=forward, y=left, z=up
-            x = distance * math.cos(angle)  # Forward distance
-            y = distance * math.sin(angle)  # Lateral distance
-            z = 0.0  # Assume humans are on ground plane
-
-            pose_3d = Pose()
-            pose_3d.position.x = float(x)
-            pose_3d.position.y = float(y)
-            pose_3d.position.z = float(z)
-
-            pose_3d.orientation.w = 1.0
-            pose_3d.orientation.x = 0.0
-            pose_3d.orientation.y = 0.0
-            pose_3d.orientation.z = 0.0
-
-            return pose_3d
-
-        except Exception as e:
-            self.get_logger().error(f'Error creating 3D pose: {str(e)}')
-            return None
+    # def create_3d_pose(self, angle, distance):
+    #     """
+    #     Create 3D pose from horizontal angle and distance.
+    #
+    #     Args:
+    #         angle: Horizontal angle (radians)
+    #         distance: Distance from LiDAR (meters)
+    #
+    #     Returns:
+    #         Pose message with 3D position
+    #     """
+    #     try:
+    #         # Convert polar to Cartesian coordinates
+    #         # LiDAR coordinate system: x=forward, y=left, z=up
+    #         x = distance * math.cos(angle)  # Forward distance
+    #         y = distance * math.sin(angle)  # Lateral distance
+    #         z = 0.0  # Assume humans are on ground plane
+    #
+    #         pose_3d = Pose()
+    #         pose_3d.position.x = float(x)
+    #         pose_3d.position.y = float(y)
+    #         pose_3d.position.z = float(z)
+    #
+    #         pose_3d.orientation.w = 1.0
+    #         pose_3d.orientation.x = 0.0
+    #         pose_3d.orientation.y = 0.0
+    #         pose_3d.orientation.z = 0.0
+    #
+    #         return pose_3d
+    #
+    #     except Exception as e:
+    #         self.get_logger().error(f'Error creating 3D pose: {str(e)}')
+    #         return None
 
 
 def main(args=None):
