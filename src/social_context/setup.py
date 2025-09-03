@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'social_context_hunav = social_context.social_context_hunav:main',
-            'image_publisher = social_context.pose_estimation.image_publisher:main',
+            'image_publisher = social_context.pose_estimation.tests.image_publisher:main',
             'human_3d_lidar_fusion_node = social_context.pose_estimation.src.human_3d_lidar_fusion_node:main',
             'openpose_node = social_context.pose_estimation.src.openpose_node:main'
         ],
