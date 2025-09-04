@@ -8,9 +8,7 @@ from sensor_msgs.msg import LaserScan, CameraInfo
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 
 class PersonRelativeLocalizer(Node):
-    """
-    Estimates relative positions of people in the robot's local coordinate frame using LiDAR data and 2D pose detection data from OpenPose
-    """
+    """Estimates relative positions of people in the robot's local coordinate frame using LiDAR data and 2D pose detection data from OpenPose"""
 
     def __init__(self):
         super().__init__('person_relative_localizer')
@@ -38,12 +36,10 @@ class PersonRelativeLocalizer(Node):
     def camera_info_callback(self, msg):
         """Capture and store the camera's calibration parameters when they become available"""
         self.camera_info = msg
-        self.get_logger().info('Camera information received')
+        self.get_logger().info('Camera calibration information received')
 
     def person_relative_localizer_callback(self, pose_msg, lidar_msg):
-        """
-        Utilizes 2D human pose detection data with LiDAR data to get 3D positions
-        """
+        """Fuses 2D human pose detection data with LiDAR data to get 3D positions"""
         if self.camera_info is None:
             self.get_logger().warn('Camera info not received')
             return
@@ -87,7 +83,27 @@ class PersonRelativeLocalizer(Node):
         if lidar_angle < lidar_msg.angle_min or lidar_angle > lidar_msg.angle_max:
             return None
 
-        pass
+        # Find corresponding LiDAR ray index
+        angle_from_min = lidar_angle - lidar_msg.angle_min
+        ray_index = int(round(angle_from_min / lidar_msg.angle_increment))
+
+        ray_index = max(0, min(ray_index, len(lidar_msg.ranges) - 1))
+
+        range_val = lidar_msg.ranges[ray_index]
+
+        if (lidar_msg.range_min <= range_val <= lidar_msg.range_max and
+                not math.isinf(range_val) and not math.isnan(range_val)):
+            return range_val
+
+        for offset in [1, -1, 2, -2]:
+            nearby_index = ray_index + offset
+            if 0 <= nearby_index < len(lidar_msg.ranges):
+                nearby_range = lidar_msg.ranges[nearby_index]
+                if (lidar_msg.range_min <= nearby_range <= lidar_msg.range_max and
+                        not math.isinf(nearby_range) and not math.isnan(nearby_range)):
+                    return nearby_range
+
+        return None
 
     def compute_local_person_position(self, angle, distance):
         """
@@ -103,11 +119,12 @@ class PersonRelativeLocalizer(Node):
         try:
             x = distance * math.cos(angle)
             y = distance * math.sin(angle)
+            z = 0.0 # Assume ground level
 
             pose_3d = Pose()
             pose_3d.position.x = float(x)
             pose_3d.position.y = float(y)
-            pose_3d.position.z = 0.0 # Assume ground level
+            pose_3d.position.z = float(z)
 
             # Identity quaternion (no rotation)
             pose_3d.orientation.w = 1.0
@@ -120,6 +137,22 @@ class PersonRelativeLocalizer(Node):
         except Exception as e:
             self.get_logger().error(f'Error computing local person position: {str(e)}')
             return None
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = PersonRelativeLocalizer()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
 
 
 
