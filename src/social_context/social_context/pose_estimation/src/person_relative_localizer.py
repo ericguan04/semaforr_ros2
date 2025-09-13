@@ -2,6 +2,7 @@
 from config import CAMERA_INFO_TOPIC, LIDAR_TOPIC, OPENPOSE_OUTPUT_TOPIC, MAX_SYNC_DELAY, PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC
 import rclpy
 import math
+import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import PoseArray, Pose
 from sensor_msgs.msg import LaserScan, CameraInfo
@@ -12,36 +13,79 @@ class PersonRelativeLocalizer(Node):
 
     def __init__(self):
         super().__init__('person_relative_localizer')
-        self.declare_parameters('camera_info_topic', CAMERA_INFO_TOPIC)
-        self.declare_parameters('lidar_topic', LIDAR_TOPIC)
-        self.declare_parameters('poses_2d_topic', OPENPOSE_OUTPUT_TOPIC)
-        self.declare_parameters('max_sync_delay', MAX_SYNC_DELAY)
+
+        self.declare_parameter('camera_info_topic', CAMERA_INFO_TOPIC)
+        self.declare_parameter('lidar_topic', LIDAR_TOPIC)
+        self.declare_parameter('poses_2d_topic', OPENPOSE_OUTPUT_TOPIC)
+        self.declare_parameter('max_sync_delay', MAX_SYNC_DELAY)
+        self.declare_parameter('min_detection_confidence', 0.5)
+        self.declare_parameter('max_detection_range', 10.0)  # meters
+        self.declare_parameter('lidar_search_window', 5)  # rays to search
+        self.declare_parameter('person_height_estimate', 1.7)  # meters
+        self.declare_parameter('min_person_width', 0.3)  # meters
+        self.declare_parameter('max_person_width', 0.8)  # meters
+
         self.camera_info = None
+        self.focal_x = None
+        self.focal_y = None
+        self.center_x = None
+        self.center_y = None
+
+        camera_info_topic = self.get_parameter('camera_info_topic').get_parameter_value().string_value
+        poses_2d_topic = self.get_parameter('poses_2d_topic').get_parameter_value().string_value
+        lidar_topic = self.get_parameter('lidar_topic').get_parameter_value().string_value
+        max_sync_delay = self.get_parameter('max_sync_delay').get_parameter_value().double_value
+
+        self.pose_3d_pub = self.create_publisher(
+            PoseArray,
+            PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC,
+            10
+        )
+
+        self.camera_info_sub = self.create_subscriber(
+            CameraInfo,
+            self.get_parameters('camera_info_topic').get_parameter_values().string_value,
+            self.camera_info_callback,
+            10
+        )
 
         # Note: We use the `Subscriber` class instead of the `create_subscriber` method because the `Subscriber` class provides us with synchronization
-        self.pose_3d_pub = self.create_publisher(PoseArray, PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC, 10)
-        self.camera_info_sub = self.create_subscriber(CameraInfo, self.get_parameters('camera_info_topic').get_parameter_values().string_value, self.camera_info_callback, 10)
-        self.pose_sub = Subscriber(self, PoseArray, self.get_parameters('poses_2d_topic').get_parameter_value().string_value())
-        self.lidar_sub = Subscriber(self, LaserScan, self.get_parameters('lidar_topic').get_parameter_value().string_value())
+        self.pose_sub = Subscriber(self, PoseArray, poses_2d_topic)
+        self.lidar_sub = Subscriber(self, LaserScan, lidar_topic)
 
         self.sync = ApproximateTimeSynchronizer(
             [self.pose_sub, self.lidar_sub],
             queue_size=10,
-            slop=self.get_parameter('max_sync_delay').get_parameter_value().double_value
+            slop=max_sync_delay,
         )
-        self.sync.registerCallback(self.person_relative_localizer_callback)
+        self.sync.registerCallback(self.synchronized_callback)
 
         self.get_logger().info('Person Relative Localizer Node started')
+        self.get_logger().info(f'Subscribing to camera info: {camera_info_topic}')
+        self.get_logger().info(f'Subscribing to 2D poses: {poses_2d_topic}')
+        self.get_logger().info(f'Subscribing to LiDAR: {lidar_topic}')
 
     def camera_info_callback(self, msg):
-        """Capture and store the camera's calibration parameters when they become available"""
+        """Store camera calibration parameters."""
         self.camera_info = msg
-        self.get_logger().info('Camera calibration information received')
 
-    def person_relative_localizer_callback(self, pose_msg, lidar_msg):
-        """Fuses 2D human pose detection data with LiDAR data to get 3D positions"""
+        # Extract camera intrinsic parameters from K matrix
+        # K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+        self.focal_x = msg.k[0]
+        self.focal_y = msg.k[4]
+        self.center_x = msg.k[2]
+        self.center_y = msg.k[5]
+
+    def synchronized_callback(self, pose_msg: PoseArray, lidar_msg: LaserScan):
+        """
+        Main callback that fuses 2D poses with LiDAR data.
+
+        Args:
+            pose_msg: Array of 2D detected poses from OpenPose
+            lidar_msg: LiDAR scan data
+        """
         if self.camera_info is None:
-            self.get_logger().warn('Camera info not received')
+            self.get_logger().warn('Camera info not yet received', throttle_duration_sec=5.0)
             return
 
         try:
@@ -49,32 +93,106 @@ class PersonRelativeLocalizer(Node):
             poses_3d.header = pose_msg.header
             poses_3d.header.frame_id = 'base_laser_link'
 
-            for pose_2d in pose_msg.pose:
+            min_confidence = self.get_parameter('min_detection_confidence').get_parameter_value().double_value
+            max_range = self.get_parameter('max_detection_range').get_parameter_value().double_value
+
+            for i, pose_2d in enumerate(pose_msg.pose):
                 pixel_x = pose_2d.position.x
+                pixel_y = pose_2d.position.y
+                confidence = pose_2d.position.z # OpenPose should store confidence in z
 
-                camera_angle = self.pixel_to_camera_angle(pixel_x)
-                lidar_range = self.get_lidar_range_at_angle(camera_angle, lidar_msg)
+                if confidence < min_confidence:
+                    self.get_logger().debug(f'Skipping person {i}: confidence {confidence:.2f} < {min_confidence}')
+                    continue
 
-                if lidar_range is not None:
-                    pose_3d = self.create_3d_pose(camera_angle, lidar_range)
+                # Convert pixel to camera angles
+                h_angle = self.pixel_to_camera_angle_horizontal(pixel_x)
+                v_angle = self.pixel_to_camera_angle_vertical(pixel_y)
 
-                    if pose_3d is not None:
-                        poses_3d.pose.append(pose_3d)
+                # Get LiDAR range at this angle
+                lidar_range = self.get_lidar_range_at_angle(h_angle, lidar_msg)
+
+                if lidar_range is None:
+                    self.get_logger().debug(
+                        f'No valid LiDAR range for person {i} at angle {math.degrees(h_angle):.1f}°')
+                    continue
+
+                if lidar_range > max_range:
+                    self.get_logger().debug(f'Person {i} too far: {lidar_range:.2f}m > {max_range}m')
+                    continue
+
+                if not self.validate_person_detection(h_angle, lidar_range, lidar_msg):
+                    self.get_logger().debug(f'Person {i} failed validation checks')
+                    continue
+
+                pose_3d = self.create_3d_pose(h_angle, v_angle, lidar_range, confidence)
+
+                if pose_3d is not None:
+                    poses_3d.poses.append(pose_3d)
+                    self.get_logger().debug(
+                        f'Person {i} localized at ({pose_3d.position.x:.2f}, '
+                        f'{pose_3d.position.y:.2f}) m, range={lidar_range:.2f}m'
+                    )
 
             self.pose_3d_pub.publish(poses_3d)
 
             if len(poses_3d.pose) > 0:
-                self.get_logger().info('3D positions received')
+                self.get_logger().info(f'Published {len(poses_3d.poses)} 3D person positions')
 
         except Exception as e:
-            self.get_logger().error(f'Error in person relative localizer callback: {str(e)}')
+            self.get_logger().error(f'Error in synchronized callback: {str(e)}', throttle_duration_sec=1.0)
 
-    def pixel_to_camera_angle(self, pixel_x):
+    def pixel_to_camera_angle_horizontal(self, pixel_x: float) -> float:
         """Utilizes camera information to calculate horizontal camera angle for provided pixel x"""
-        focal_x = self.camera_info.k[0]
-        center_x = self.camera_info.k[2]
-        angle = math.atan2(pixel_x - center_x, focal_x) # Positive angle = right, negative = left
+        angle = math.atan2(pixel_x - self. center_x, self.focal_x) # Positive angle = right, negative = left
         return angle
+
+    def pixel_to_camera_angle_vertical(self, pixel_y: float) -> float:
+        """Utilizes camera information to calculate vertical camera angle for provided pixel y"""
+        angle = math.atan2(self.center_y - pixel_y, self.focal_y) # Positive angle = right, negative = left
+        return angle
+
+    def validate_person_detection(self, angle: float, range_val: float, lidar_msg: LaserScan) -> bool:
+        """
+        Validate that the detection corresponds to a person-like object.
+
+        Args:
+            angle: Horizontal angle to detected person
+            range_val: Range to detected person
+            lidar_msg: Full LiDAR scan
+
+        Returns:
+            True if detection appears valid
+        """
+        min_width = self.get_parameter('min_person_width').get_parameter_value().double_value
+        max_width = self.get_parameter('max_person_width').get_parameter_value().double_value
+
+        # Find ray index for this angle
+        angle_from_min = angle - lidar_msg.angle_min
+        center_idx = int(round(angle_from_min / lidar_msg.angle_increment))
+
+        if center_idx < 0 or center_idx >= len(lidar_msg.ranges):
+            return False
+
+        # Estimate angular width of person at this range
+        expected_angular_width = math.atan2(max_width / 2, range_val) * 2
+        rays_to_check = int(expected_angular_width / lidar_msg.angle_increment / 2)
+
+        # Check for consistent ranges around the detection
+        consistent_count = 0
+        for offset in range(-rays_to_check, rays_to_check + 1):
+            idx = center_idx + offset
+            if 0 <= idx < len(lidar_msg.ranges):
+                r = lidar_msg.ranges[idx]
+                if (lidar_msg.range_min <= r <= lidar_msg.range_max and
+                        not math.isinf(r) and not math.isnan(r)):
+                    # Check if range is similar (within 0.5m)
+                    if abs(r - range_val) < 0.5:
+                        consistent_count += 1
+
+        # Require at least 30% of rays to be consistent
+        min_consistent_rays = max(2, rays_to_check * 0.3)
+        return consistent_count >= min_consistent_rays
 
     def get_lidar_range_at_angle(self, target_angle, lidar_msg):
         """Get LiDAR range measurement closest to the target camera angle."""
@@ -89,48 +207,57 @@ class PersonRelativeLocalizer(Node):
 
         ray_index = max(0, min(ray_index, len(lidar_msg.ranges) - 1))
 
-        range_val = lidar_msg.ranges[ray_index]
+        search_window = self.get_parameter('lidar_search_window').get_parameter_value().integer_valu
 
-        if (lidar_msg.range_min <= range_val <= lidar_msg.range_max and
-                not math.isinf(range_val) and not math.isnan(range_val)):
-            return range_val
+        valid_ranges = []
+        for offset in range(-search_window, search_window + 1):
+            idx = ray_index + offset
+            if 0 <= idx < len(lidar_msg.ranges):
+                range_val = lidar_msg.ranges[idx]
+                if (lidar_msg.range_min <= range_val <= lidar_msg.range_max and
+                        not math.isinf(range_val) and not math.isnan(range_val)):
+                    valid_ranges.append(range_val)
 
-        for offset in [1, -1, 2, -2]:
-            nearby_index = ray_index + offset
-            if 0 <= nearby_index < len(lidar_msg.ranges):
-                nearby_range = lidar_msg.ranges[nearby_index]
-                if (lidar_msg.range_min <= nearby_range <= lidar_msg.range_max and
-                        not math.isinf(nearby_range) and not math.isnan(nearby_range)):
-                    return nearby_range
+        if valid_ranges:
+            # Return median of valid ranges to reduce noise
+            return float(np.median(valid_ranges))
 
         return None
 
-    def compute_local_person_position(self, angle, distance):
+    def create_3d_pose(self, h_angle: float, v_angle: float, distance: float, confidence: float) -> Pose:
         """
-        Convert polar coordinates (angle, distance) to 3D pose in robot's local frame.
+        Create 3D pose from angles and distance.
 
         Args:
-            angle: Horizontal angle in radians (positive = right, negative = left)
-            distance: Distance from LiDAR in meters
+            h_angle: Horizontal angle (yaw)
+            v_angle: Vertical angle (pitch)
+            distance: Range measurement
+            confidence: Detection confidence
 
         Returns:
-            Pose: 3D position with person assumed at ground level, or None if error
+            3D pose in robot frame
         """
         try:
-            x = distance * math.cos(angle)
-            y = distance * math.sin(angle)
+            x = distance * math.cos(h_angle)
+            y = distance * math.sin(h_angle)
             z = 0.0 # Assume ground level
+
+            person_height = self.get_parameter('person_height_estimate').get_parameter_value().double_value
+            z = distance * math.tan(v_angle)
 
             pose_3d = Pose()
             pose_3d.position.x = float(x)
             pose_3d.position.y = float(y)
             pose_3d.position.z = float(z)
 
-            # Identity quaternion (no rotation)
-            pose_3d.orientation.w = 1.0
+            # Orientation: face towards robot
+            yaw = math.atan2(-y, -x)  # Opposite direction = facing robot
+
+            # Convert yaw to quaternion (only rotating around z-axis)
             pose_3d.orientation.x = 0.0
             pose_3d.orientation.y = 0.0
-            pose_3d.orientation.z = 0.0
+            pose_3d.orientation.z = math.sin(yaw / 2.0)
+            pose_3d.orientation.w = math.cos(yaw / 2.0)
 
             return pose_3d
 
