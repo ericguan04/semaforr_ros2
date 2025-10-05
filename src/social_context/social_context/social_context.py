@@ -3,9 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from geometry_msgs.msg import PoseStamped
-import cv2
-
+from geometry_msgs.msg import PoseStamped, PoseArray
 from collections import defaultdict # might need to use default dict
 from trajectory_prediction.pipeline import pipeline
 
@@ -40,23 +38,19 @@ class CoordinateListener(Node):
     def __init__(self):
         super().__init__('coordinate_listener')
         
-        # Subscriber node will receive pedestrian ID and (x, y) coordinates
-        # Update this when sensor_listener is ready
-        self.camera_subscriber = self.create_subscription(
-            Image,
-            '/camera/processed_image',
-            # Every time a new message is received, call the image_callback function
-            self.coordinate_callback,
+        # Subscriber node will receive pedestrian ID and poses
+        self.pose_sub = self.create_subscription(
+            PoseArray,
+            'human_poses',
+            self.pose_callback,
             10
         )
-        
-        self.bridge = CvBridge()
         
         # Social context model will store pedestrian data in the environment (publish dict to semaforr)
         self.social_context_model = {}
 
         # Publisher for predicted positions using PoseStamped
-        self.pose_publisher = self.create_publisher(
+        self.pred_pose_pub = self.create_publisher(
             PoseStamped,
             '/pedestrian_predictions',
             10
@@ -64,7 +58,7 @@ class CoordinateListener(Node):
         
         self.get_logger().info("Coordinate listener node and social context model is running")
 
-    def coordinate_callback(self, msg):
+    def pose_callback(self, msg):
         try:
             # Unpack the msg to get pedestrian ID and (x, y) coordinates
             id, obs_coordinate = msg.id, msg.obs_coordinate
