@@ -7,7 +7,7 @@ from cv_bridge import CvBridge
 import sys
 import os
 
-from src.social_context.social_context.pose_estimation.config import CAMERA_IMAGE_DATA_TOPIC
+from social_context.pose_estimation.config import CAMERA_IMAGE_DATA_TOPIC
 
 OPENPOSE_PATH = os.environ.get('OPENPOSE_PATH','')
 sys.path.append(f'{OPENPOSE_PATH}/build/python/openpose')
@@ -24,7 +24,7 @@ class OpenPoseNode(Node):
 
         params = {
             "model_folder": self.get_parameter('model_folder').get_parameter_value().string_value,
-            "model_pose": "BODY_25"
+            "model_pose": "BODY_25",
         }
 
         self.confidence_threshold = self.get_parameter('confidence_threshold').value
@@ -61,7 +61,7 @@ class OpenPoseNode(Node):
                             pose = Pose()
                             pose.position.x = float(person[8, 0])
                             pose.position.y = float(person[8, 1])
-                            pose.position.z = 0.0
+                            pose.position.z = float(person[8, 2]) # Confidence score
                             pose_array.poses.append(pose)
 
             self.pose_pub.publish(pose_array)

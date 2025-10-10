@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from config import (CAMERA_INFO_TOPIC, LIDAR_TOPIC, OPENPOSE_OUTPUT_TOPIC,
+from social_context.pose_estimation.config import (CAMERA_INFO_TOPIC, LIDAR_TOPIC, OPENPOSE_OUTPUT_TOPIC,
                     MAX_SYNC_DELAY, PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC)
 import rclpy
 import math
@@ -98,6 +98,9 @@ class PersonRelativeLocalizer(Node):
             pose_msg: Array of 2D detected poses from OpenPose
             lidar_msg: LiDAR scan data
         """
+
+        self.get_logger().info(f'=== SYNC: Received {len(pose_msg.poses)} poses ===')
+
         if self.camera_info is None:
             self.get_logger().warn('Camera info not yet received', throttle_duration_sec=5.0)
             return
@@ -117,7 +120,9 @@ class PersonRelativeLocalizer(Node):
             for i, pose_2d in enumerate(pose_msg.poses):
                 pixel_x = pose_2d.position.x
                 pixel_y = pose_2d.position.y
-                confidence = pose_2d.position.z # OpenPose should store confidence in z
+                confidence = pose_2d.position.z
+
+                self.get_logger().info(f'Person {i}: pixel=({pixel_x:.1f}, {pixel_y:.1f}), conf={confidence:.3f}')
 
                 if confidence < min_confidence:
                     self.get_logger().debug(f'Skipping person {i}: confidence {confidence:.2f} < {min_confidence}')
