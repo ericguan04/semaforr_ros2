@@ -4,10 +4,10 @@ This module contains code for estimating human poses from sensor data (camera, l
 
 ## Overview
 
-Currently, the pose estimation system centers around the **OpenPose Node**, which processes camera images and detects human body position poses using the OpenPose library. 
+Currently, the pose estimation system centers around the **OpenPose Node**, which processes camera images and detects human body position poses using the OpenPose library. Alternatively, the code now includes the MediaPipe Pose Node.
 
 **Core Component:**
-- **OpenPose Node**: Processes live camera data and publishes human pose detections in 2D pixel coordinates
+- **OpenPose Node**: Processes live camera data and publishes human pose detections in 2D pixel coordinates (alternatively, you can use the **MediaPipe Pose Node**). 
 - **Human 3D LiDAR Fusion Node**: Combines 2D pose detections with LiDAR data to produce 3D human positions for navigation
 - **Image Publisher**: A testing utility that publishes static test images to simulate camera input during development (lightweight alternative to using HuNav simulator)
 
@@ -238,6 +238,9 @@ ros2 topic list
 # Terminal 1: OpenPose node
 export OPENPOSE_PATH="/path/to/your/openpose"
 ros2 run social_context openpose_node
+
+# Optionally: You can instead use media pipe
+ros2 run social_context mediapipe_pose_node
 
 # Terminal 2: 3D fusion node
 ros2 run social_context human_3d_lidar_fusion_node
