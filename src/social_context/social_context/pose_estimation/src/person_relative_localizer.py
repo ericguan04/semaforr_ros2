@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from social_context.pose_estimation.config import (CAMERA_INFO_TOPIC, LIDAR_TOPIC, OPENPOSE_OUTPUT_TOPIC,
+from social_context.pose_estimation.config import (CAMERA_INFO_TOPIC, LIDAR_TOPIC, CAMERA_2D_POSE_DATA_TOPIC,
                     MAX_SYNC_DELAY, PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC)
 import rclpy
 import math
@@ -23,7 +23,7 @@ class PersonRelativeLocalizer(Node):
 
         self.declare_parameter('camera_info_topic', CAMERA_INFO_TOPIC)
         self.declare_parameter('lidar_topic', LIDAR_TOPIC)
-        self.declare_parameter('poses_2d_topic', OPENPOSE_OUTPUT_TOPIC)
+        self.declare_parameter('poses_2d_topic', CAMERA_2D_POSE_DATA_TOPIC)
         self.declare_parameter('max_sync_delay', MAX_SYNC_DELAY)
         self.declare_parameter('min_detection_confidence', 0.3)
         self.declare_parameter('max_detection_range', 10.0)  # meters
