@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
 MediaPipe-based 2D pose detector.
-
-Fast, CPU-friendly, single-person detection using Google's MediaPipe.
 """
 
 import cv2
@@ -41,9 +39,9 @@ class MediaPipePoseDetector(AbstractPoseDetector):
         self.pose = None
 
     def initialize(self) -> bool:
-        """Initialize MediaPipe Pose."""
+        """Initialize MediaPipe."""
         try:
-            self.log_info("Initializing MediaPipe Pose...")
+            self.log_info("Initializing MediaPipe...")
 
             mp_pose = mp.solutions.pose
             self.pose = mp_pose.Pose(
@@ -76,7 +74,7 @@ class MediaPipePoseDetector(AbstractPoseDetector):
             image: BGR image as numpy array (H, W, 3)
 
         Returns:
-            List with PersonDetection objects
+            List with PersonDetection objects (one per detected person)
         """
         if not self.is_ready:
             self.log_error("Detector not initialized!")

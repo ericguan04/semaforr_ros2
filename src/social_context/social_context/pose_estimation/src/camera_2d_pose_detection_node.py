@@ -133,26 +133,30 @@ def main_mediapipe(args=None):
         rclpy.shutdown()
 
 
-# def main_openpose(args=None):
-#     """Launch node with OpenPose detector."""
-#     from social_context.pose_estimation.src.pose_detectors.openpose_detector import OpenPoseDetector
-#
-#     rclpy.init(args=args)
-#
-#     # Create OpenPose detector
-#     detector = OpenPoseDetector(num_gpu=0)  # Set to 1 if GPU available
-#
-#     # Create node with detector
-#     node = Camera2DPoseNode(detector)
-#     detector.logger = node.get_logger()
-#
-#     try:
-#         rclpy.spin(node)
-#     except KeyboardInterrupt:
-#         pass
-#     finally:
-#         node.destroy_node()
-#         rclpy.shutdown()
+def main_openpose(args=None):
+    """Launch node with OpenPose detector."""
+    from social_context.pose_estimation.src.pose_detectors.openpose_pose_detector import OpenPosePoseDetector
+
+    rclpy.init(args=args)
+
+    # Create OpenPose detector
+    detector = OpenPosePoseDetector(
+        num_gpu=0,  # Set to 1 if GPU available
+        model_pose="BODY_25",
+        confidence_threshold=0.1
+    )
+
+    # Create node with detector
+    node = Camera2DPoseDetectionNode(detector)
+    detector.logger = node.get_logger()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main_mediapipe()
