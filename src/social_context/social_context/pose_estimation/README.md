@@ -4,58 +4,89 @@ This module contains code for estimating human poses from sensor data (camera, l
 
 ## Overview
 
-Currently, the pose estimation system centers around the **OpenPose Node**, which processes camera images and detects human body position poses using the OpenPose library. Alternatively, the code now includes the MediaPipe Pose Node.
+The pose estimation system uses a modular with three main stages:
 
-**Core Component:**
-- **OpenPose Node**: Processes live camera data and publishes human pose detections in 2D pixel coordinates (alternatively, you can use the **MediaPipe Pose Node**). 
-- **Human 3D LiDAR Fusion Node**: Combines 2D pose detections with LiDAR data to produce 3D human positions for navigation
-- **Image Publisher**: A testing utility that publishes static test images to simulate camera input during development (lightweight alternative to using HuNav simulator)
+### 1. 2D Pose Detection (Camera → Pixel Coordinates)
+**Node:** `camera_2d_pose_detection_node`
+
+Detects human poses from camera images and publishes 2D detections in pixel coordinates.
+
+**Available Detector Implementations:**
+- **MediaPipe** (`pose_mediapipe`) - Fast, CPU-friendly
+  - ~10-30 Hz on CPU
+  - Easy installation: `pip install mediapipe`
+  - Recommended for most use cases
+  
+- **OpenPose** (`pose_openpose`) - Multi-person detection with high accuracy
+  - ~0.1 Hz on CPU, ~10-30 Hz with GPU
+  - Requires manual installation
+
+**Output:** `/human_poses` topic (2D pixel coordinates + confidence)
+
+### 2. 3D Localization (2D Poses + LiDAR → Robot-Relative Coordinates)
+**Node:** `person_localizer`
+
+Fuses 2D pose detections with LiDAR data using camera intrinsics and TF transforms to estimate 3D positions of people relative to the robot.
+
+**Input:** 
+- `/human_poses` (2D detections)
+- `/scan_raw` (LiDAR)
+- `/camera_info` (camera calibration)
+- TF transforms (camera ↔ LiDAR)
+
+**Output:** `/human_poses_3d` topic (3D positions in robot frame)
+
+### 3. Global Localization (Robot-Relative → Map Coordinates)
+*Coming soon - transforms local coordinates to global map frame*
 
 ## Prerequisites
 
 ### System Requirements
 - ROS2 Humble (or compatible version)
-- Python 3.10
-- OpenCV
-- Test images from MPII Human Pose Dataset
+- Python 3.10+
+- OpenCV (`pip install opencv-python`)
+- **For MediaPipe:** `pip install mediapipe` (recommended)
+- **For OpenPose:** Manual OpenPose installation (optional)
 
-### OpenPose Installation
-You must have OpenPose installed on your system. Clone it from the official repository:
+### Detector Installation
+
+#### MediaPipe (Recommended - Easy Setup)
+```bash
+pip install mediapipe opencv-python
+```
+
+#### OpenPose (Optional)
+
+Only needed if you want to use OpenPose instead of MediaPipe:
+
 ```bash
 git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git
 cd openpose
 # Follow OpenPose installation instructions for your system
+# Note: Requires GPU for real-time performance
 ```
 
-## Testing Setup
+## Setup
 
-The following instructions are for **testing the pose estimation system with static images**. In production, the OpenPose node will receive live camera data from actual camera nodes.
-
-### 1. Prepare Test Data (Testing Only)
-Download images from the [MPII Human Pose Dataset](http://human-pose.mpi-inf.mpg.de/) and place them in the test images directory:
-```bash
-# Create test_images directory if it doesn't exist
-mkdir -p src/social_context/social_context/pose_estimation/test_images/
-
-# Place your downloaded .jpg and .png files in this directory
-```
-
-### 2. Build the Package
+### 1. Build the Package
 Navigate to your workspace root and build the social context package:
+
 ```bash
 # Navigate to workspace root
-cd ~/yourdirectory/semaforr_ros2
+cd ~/semaforr_ros2
 
 # Source ROS2 and workspace
 source /opt/ros/humble/setup.bash
-source install/setup.bash
 
 # Build the social context package
 colcon build --packages-select social_context
+
+# Source workspace
+source install/setup.bash
 ```
 
-### 3. Configure OpenPose Path
-Locate your OpenPose installation directory:
+### 2. Configure OpenPose Path (Only if using OpenPose)
+If using the OpenPose detector, set the installation path:
 ```bash
 # Check common installation paths
 ls /usr/local/openpose/build/python/ 2>/dev/null || echo "Not found in /usr/local/openpose"
@@ -74,9 +105,77 @@ find /home -name "pyopenpose*" 2>/dev/null
 export OPENPOSE_PATH="/home/developer2/openpose"
 ```
 
-## Testing the Pose Estimation System
+## Running the System
 
-### Terminal 1: Image Publisher (Testing Only)
+### Option 1: With MediaPipe (Recommended - Fast & Easy)
+
+#### Terminal 1: 2D Pose Detection
+
+```bash
+cd ~/semaforr_ros2
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Run MediaPipe detector
+ros2 run social_context pose_mediapipe
+```
+
+#### Terminal 2: 3D Localization
+
+```bash
+cd ~/semaforr_ros2
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Run 3D localizer
+ros2 run social_context person_relative_localizer
+```
+
+#### Additional Terminals: Monitor Output (Optional)
+
+```bash
+# View 2D detections
+ros2 topic echo /human_poses
+
+# View 3D positions
+ros2 topic echo /human_poses_3d
+
+# Check publishing rates
+ros2 topic hz /human_poses
+ros2 topic hz /human_poses_3d
+```
+
+### Option 2: With OpenPose (Requires GPU)
+
+```bash
+cd ~/semaforr_ros2
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Set OpenPose path
+export OPENPOSE_PATH="/home/yourusername/openpose"
+
+# Run OpenPose detector
+ros2 run social_context pose_openpose
+```
+
+**Terminal 2 and Additional Terminals:** Same as Option 1
+
+## Testing Without Robot/Simulator
+
+### Using Static Test Images
+
+For development without HuNavSim or a real robot, we provide an image publisher node:
+
+```bash
+# Create test directory
+mkdir -p src/social_context/social_context/pose_estimation/test_images/
+
+# Add your .jpg or .png images to this directory
+# E.g MPII Human Pose Dataset images
+```
+
+### Terminal 1: Publish test images 
 ```bash
 # Navigate to workspace root
 cd ~/yourdirectory/semaforr_ros2
@@ -88,23 +187,6 @@ source install/setup.bash
 # Run image publisher with test images
 ros2 run social_context image_publisher --ros-args -p image_dir:="$(pwd)/src/social_context/social_context/pose_estimation/test_images/"
 ```
-
-### Terminal 2: OpenPose Node
-```bash
-# Navigate to workspace root
-cd ~/yourdirectory/semaforr_ros2
-
-# Source ROS2 and workspace
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-
-# Set OpenPose path (adjust to your actual installation)
-export OPENPOSE_PATH="/home/yourusername/openpose"
-
-# Run OpenPose node
-ros2 run social_context openpose_node
-```
-
 ### Terminal 3: Monitor Output
 ```bash
 # Source ROS2
