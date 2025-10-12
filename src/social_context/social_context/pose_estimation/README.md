@@ -4,7 +4,7 @@ This module contains code for estimating human poses from sensor data (camera, l
 
 ## Overview
 
-The pose estimation system uses a modular with three main stages:
+The pose estimation system uses a modular architecture with three main stages:
 
 ### 1. 2D Pose Detection (Camera → Pixel Coordinates)
 **Node:** `camera_2d_pose_detection_node`
