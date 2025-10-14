@@ -236,7 +236,7 @@ public:
 
         while (rclcpp::ok())
         {
-            std::cout << "within ok() while loop" << std::endl;
+            // std::cout << "within ok() while loop" << std::endl;
             while (init_pos_received == false or init_laser_received == false)
             {
                 if (init_laser_received == false and init_pos_received == false)
@@ -368,7 +368,7 @@ public:
 			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
 			// if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){
             // turn_expected/0.5 <-- original
-			if((elapsed_time >= turn_expected) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate) and fabs(turn_completed) > 0){
+			if((elapsed_time >= turn_expected*3) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){ // POTENTIAL ERROR
 				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
 				actionComplete = true;
 			}
@@ -398,11 +398,13 @@ public:
 		}   
 		else if(action.type == RIGHT_TURN){
 			base_cmd.linear.x = 0.01;
-			base_cmd.angular.z = -0.05; //-0.05 radians per second
+			// base_cmd.angular.z = -0.05; //-0.05 radians per second
+            base_cmd.angular.z = -0.5; //-0.5 radians per second
 		}
 		else if(action.type == LEFT_TURN){
 			base_cmd.linear.x = 0.01;
-			base_cmd.angular.z = 0.05; //0.05 radians per second
+			// base_cmd.angular.z = 0.05; //0.05 radians per second
+            base_cmd.angular.z = 0.5; //0.5 radians per second
 		}
 		else if(action.type == PAUSE){
 			base_cmd.linear.x = 0;

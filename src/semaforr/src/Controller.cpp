@@ -1815,12 +1815,12 @@ void Controller::tierThreeDecision(FORRAction *decision){
     // check if advisor should make a decision
     advisor->set_commenting();
     if(advisor->is_active() == false){
-      cout << advisor->get_name() << " is inactive " << endl;
+      //cout << advisor->get_name() << " is inactive " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }
     if(advisor->is_commenting() == false){
-      cout << advisor->get_name() << " is not commenting " << endl;
+      //cout << advisor->get_name() << " is not commenting " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }

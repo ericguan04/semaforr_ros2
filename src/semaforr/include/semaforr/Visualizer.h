@@ -1319,16 +1319,16 @@ public:
 	laser_pub_->publish(laserScan);
 
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
-	cout << "After max_forward" << endl;
+	//cout << "After max_forward" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
 	list<Task*>& agenda = beliefs->getAgentState()->getAgenda();
 	list<Task*>& all_agenda = beliefs->getAgentState()->getAllAgenda();
-	cout << "After all_agenda" << endl;
+	//cout << "After all_agenda" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After all_agenda");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	vector< vector< CartesianPoint> > trails =  beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-	cout << "After trails" << endl;
+	//cout << "After trails" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
@@ -1347,7 +1347,7 @@ public:
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 
-	cout << "After decision statistics" << endl;
+	//cout << "After decision statistics" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After decision statistics");
 	int decisionCount = -1;
 	int currentTask = -1;
@@ -1356,7 +1356,7 @@ public:
   		//if(currentTask != 0)
 		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
-	cout << "After decisionCount" << endl;
+	//cout << "After decisionCount" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After decisionCount");
 
 	cout << "Current task " << currentTask << " and decision number " << decisionCount << " with overall time " << overallTimeSec << " and computation time " << computationTimeSec << endl;
@@ -1367,7 +1367,7 @@ public:
  		double y = laserEndpoints[i].get_y();
 		lep << x << "," << y << ";";
 	}
-	cout << "After laserEndpoints" << endl;
+	//cout << "After laserEndpoints" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After laserEndpoints");
 
 
@@ -1380,7 +1380,7 @@ public:
 		}
 		ls << length << ",";
 	}
-	cout << "After laserScan" << endl;
+	//cout << "After laserScan" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After laserScan");
 	/*int totalSize = 0;
 	for(int i = 0; i < allTrace.size(); i++){
@@ -1397,7 +1397,7 @@ public:
 		}
 		regionsstream << ";";
 	}
-	cout << "After regions" << endl;
+	//cout << "After regions" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After regions");
 
 
@@ -1408,7 +1408,7 @@ public:
 		}
 		trailstream << ";";
 	}
-	cout << "After trails" << endl;
+	//cout << "After trails" << endl;
 	// RCLCPP_DEBUG(this->get_logger(), "After trails");
 
 	std::stringstream conveyorStream;
@@ -1418,7 +1418,7 @@ public:
 		}
 		conveyorStream << ";";
 	}
-	cout << "After conveyors" << endl;
+	//cout << "After conveyors" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After conveyors");
 	
 
@@ -1429,7 +1429,7 @@ public:
 		}
 		doorStream << ";";
 	}
-	cout << "After doors" << endl;
+	//cout << "After doors" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After doors");
 
 	std::stringstream hallwayStream;
@@ -1441,7 +1441,7 @@ public:
 		}
 		hallwayStream << ";";
 	}
-	cout << "After hallways" << endl;
+	//cout << "After hallways" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After hallways");
 
 	std::stringstream planStream;
@@ -1459,7 +1459,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//planStream << "\t" << plancost;
 	}
-	cout << "After planStream" << endl;
+	//cout << "After planStream" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After planStream");
 
 	std::stringstream origPlanStream;
@@ -1477,7 +1477,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//origPlanStream << "\t" << plancost;
 	}
-	cout << "After origPlanStream" << endl;
+	//cout << "After origPlanStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After origPlanStream");
 
 	std::stringstream crowdStream;
@@ -1488,7 +1488,7 @@ public:
 		<< " " << crowdpose.poses[i].orientation.y << " " << crowdpose.poses[i].orientation.z << " " << crowdpose.poses[i].orientation.w;
 		crowdStream << ";";
 	}
-	cout << "After crowdStream" << endl;
+	//cout << "After crowdStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After crowdStream");
 
 	std::stringstream allCrowdStream;
@@ -1499,7 +1499,7 @@ public:
 		<< " " << crowdposeall.poses[i].orientation.y << " " << crowdposeall.poses[i].orientation.z << " " << crowdposeall.poses[i].orientation.w;
 		allCrowdStream << ";";
 	}
-	cout << "After allCrowdStream" << endl;
+	//cout << "After allCrowdStream" << endl;
 	//// RCLCPP_DEBUG(this->get_logger(), "After all crowdStream");
 
 	// std::stringstream crowdModel;
@@ -1624,7 +1624,7 @@ public:
 	else{
 		passageStream << " ";
 	}
-	cout << "After passageStream" << endl;
+	//cout << "After passageStream" << endl;
 	// // RCLCPP_DEBUG(this->get_logger(), "After conveyors");
 
 	std::stringstream output;
