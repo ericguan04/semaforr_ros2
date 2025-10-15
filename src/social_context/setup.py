@@ -21,9 +21,12 @@ setup(
     entry_points={
         'console_scripts': [
             'social_context_hunav = social_context.social_context_hunav:main',
-            'image_publisher = social_context.pose_estimation.image_publisher:main',
-            'openpose_node = social_context.pose_estimation.openpose_node:main',
-            '3d_pose_localizer = social_context.pose_estimation.3d_pose_localizer:main',
+            'image_publisher = social_context.pose_estimation.tests.image_publisher:main',
+            'person_relative_localizer = social_context.pose_estimation.src.person_relative_localizer:main',
+            # 'openpose_node = social_context.pose_estimation.src.openpose_node:main',
+            # 'mediapipe_pose_node = social_context.pose_estimation.src.mediapipe_pose_node:main',
+            'pose_openpose = social_context.pose_estimation.src.camera_2d_pose_detection_node:main_openpose',
+            'pose_mediapipe = social_context.pose_estimation.src.camera_2d_pose_detection_node:main_mediapipe',
         ],
     },
 )
