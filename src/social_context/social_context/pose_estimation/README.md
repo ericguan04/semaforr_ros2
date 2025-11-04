@@ -120,7 +120,7 @@ source install/setup.bash
 ros2 run social_context pose_mediapipe
 ```
 
-#### Terminal 2: 3D Localization
+#### Terminal 2: Local 3D Human Poses  
 
 ```bash
 cd ~/semaforr_ros2
@@ -131,6 +131,16 @@ source install/setup.bash
 ros2 run social_context person_relative_localizer
 ```
 
+#### Terminal 3: Global 3D Human Poses
+
+```bash
+cd ~/semaforr_ros2
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+ros2 run social_context global_human_localizer
+```
+
 #### Additional Terminals: Monitor Output (Optional)
 
 ```bash
@@ -139,10 +149,11 @@ ros2 topic echo /human_poses
 
 # View 3D positions
 ros2 topic echo /human_poses_3d
+ros2 topic echo /human_poses_3d_global
 
 # Check publishing rates
 ros2 topic hz /human_poses
-ros2 topic hz /human_poses_3d
+ros2 topic hz /human_poses_3d'
 ```
 
 ### Option 2: With OpenPose (Requires GPU)
