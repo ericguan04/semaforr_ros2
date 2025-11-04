@@ -84,6 +84,7 @@ class GlobalHumanLocalizer(Node):
                 transform = self.tf_buffer.lookup_transform(
                     self.map_frame,
                     self.robot_frame,
+                    # rclpy.time.Time(),
                     timestamp,
                     timeout=rclpy.duration.Duration(seconds=self.tf_timeout)
                 )
@@ -105,7 +106,7 @@ class GlobalHumanLocalizer(Node):
                 pose_stamped.header.frame_id = self.robot_frame
                 pose_stamped.pose = local_pose
 
-                global_pose_stamped = tf2_geometry_msgs.do_transform_pose(
+                global_pose_stamped = tf2_geometry_msgs.do_transform_pose_stamped(
                     pose_stamped,
                     transform
                 )
