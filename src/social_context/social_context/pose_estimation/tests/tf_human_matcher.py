@@ -22,7 +22,7 @@ class TFHumanMatcher(Node):
 
         self.declare_parameter('det_topic', '/human_poses_3d_global')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('match_threshold', 0.4)
+        self.declare_parameter('match_threshold', 0.8)
 
         self.det_topic = self.get_parameter('det_topic').value
         self.map_frame = self.get_parameter('map_frame').value
