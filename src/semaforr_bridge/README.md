@@ -1,4 +1,3 @@
-
 # SemaFORR Bridge Package
 
 A ROS2 package for bridging incompatible topics and messages between ROS systems, enabling seamless integration for Social-SemaFORR navigation.

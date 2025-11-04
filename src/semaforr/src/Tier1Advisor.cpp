@@ -161,7 +161,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     }
   }
   if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "skeleton" and beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "hallwayskel" and beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
-    CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+    CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY()); // THIS GIVES -nan -nan FOR SOME REASON
     cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
     bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
     if(waypointInSight == true){
@@ -824,11 +824,14 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
  */
 bool Tier1Advisor::advisorAvoidObstacles(){
   // RCLCPP_DEBUG(this->get_logger(), "In advisor avoid obstacles");
+  cout << "Advisor Avoid Obstacles called" << endl;
   FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
   // RCLCPP_DEBUG_STREAM(this->get_logger(), "Max allowed forward action : " << max_forward.type << " " << max_forward.parameter);
+  cout << "Max allowed forward action : " << max_forward.type << " " << max_forward.parameter << endl;
   int intensity = max_forward.parameter;
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *forward_set = beliefs->getAgentState()->getForwardActionSet();
+  cout << "vetoedActions and forward_set obtained" << endl;
   for(int i = forward_set->size()-1 ; i > 0; i--){
     FORRAction a(FORWARD,i);
     if(i > intensity){
@@ -838,10 +841,14 @@ bool Tier1Advisor::advisorAvoidObstacles(){
     // Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(a);
     // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << a.type << " " << a.parameter << endl;
   }
+  cout << "for loop for forward actions done" << endl;
   set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
+  cout << "rotation_set obtained" << endl;
   for(int i = 1; i < rotation_set->size()/2+1 ; i++){
     FORRAction forrAction = FORRAction(RIGHT_TURN, i);
+    cout << "Start getting expected position for RIGHT_TURN " << endl;
     Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    cout << "Got expected position for RIGHT_TURN " << endl;
     // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
     if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) < 0.1){
       (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
@@ -1231,6 +1238,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         //   }
         // }
         // localExploration->addToQueue(potential_exploration);
+        cout << "generate new potentials" << endl;
         if(!localExploration->getFinishedPotentials()){
           cout << "finished current potential, go to next" << endl;
           localExploration->atStartOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));
@@ -1243,10 +1251,11 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             }
           }
           else{
-            cout << "get to start of current potential" << endl;
+            cout << "get to start of current potential 1" << endl;
             vector<CartesianPoint> end_waypoints = localExploration->getPathToEnd();
+            cout << "end_waypoints size " << end_waypoints.size() << endl;
             for(int i = end_waypoints.size()-1; i >= 0; i--){
-              // cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
+              cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
               beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], 3);
             }
             vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
@@ -1504,7 +1513,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           }
         }
       }
-      cout << "potential_exploration " << potential_exploration.size() << endl;
+      cout << "potential_exploration: " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration);
         localExploration->atStartOfPotential(current);
@@ -1517,18 +1526,19 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           }
         }
         else{
-          cout << "get to start of current potential" << endl;
+          cout << "get to start of current potential 2" << endl;
           vector<CartesianPoint> end_waypoints = localExploration->getPathToEnd();
+          cout << "end_waypoints size " << end_waypoints.size() << endl;
           for(int i = end_waypoints.size()-1; i >= 0; i--){
-            // cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
+            cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], 3);
           }
           //CHECK IF CURRENT IN REGION OTHERWISE FOLLOW PATH TRAIL BACK TO REGION
-          // cout << "currently_in_region " << currently_in_region << " start_in_region " << start_in_region << endl;
+          cout << "currently_in_region " << currently_in_region << " start_in_region " << start_in_region << endl;
           if(currently_in_region == true and start_in_region == true){
             vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
             for(int i = waypoints.size()-1; i >= 0; i--){
-              // cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
+              cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
               beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], 3);
             }
           }
@@ -1540,7 +1550,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             CartesianPoint new_start_nearby;
             int new_start_region_ind = -1;
             int new_start_nearby_ind = -1;
-            // cout << "positionHis " << positionHis->size() << endl;
+            cout << "positionHis " << positionHis->size() << endl;
             for(int i = 1; i < positionHis->size(); i++){
               if(found_recent_in_region == false){
                 for(int j = 0; j < regions.size(); j++){
@@ -1563,11 +1573,11 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 break;
               }
             }
-            // cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
+            cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
             if(found_recent_in_region == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_nearby == false)){
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start_region);
               for(int i = waypoints.size()-1; i >= 0; i--){
-                // cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
+                cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], 3);
               }
               vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
@@ -1652,6 +1662,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       else{
         cout << "no available potential places" << endl;
         vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
+        cout << "end_waypoints size " << end_waypoints.size() << endl;
         for(int i = end_waypoints.size()-1; i >= 0; i--){
           // cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
           beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], 3);

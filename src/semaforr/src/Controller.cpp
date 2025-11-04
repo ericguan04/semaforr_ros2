@@ -1150,17 +1150,21 @@ bool Controller::isMissionComplete(){
 //
 FORRAction Controller::decide() {
   // RCLCPP_DEBUG(this->get_logger(), "Entering decision loop");
+  cout << "Entering decision loop" << endl;
   FORRAction decidedAction;
   if(!highwayExploration->getHighwaysComplete() and highwaysOn){
+    cout << "highway decision " << endl;
     decidedAction = highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     decisionStats->decisionTier = 1.7;
   }
   else if(!frontierExploration->getFrontiersComplete() and frontiersOn){
+    cout << "frontier decision " << endl;
     decidedAction = frontierExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     cout << "frontier decision " << decidedAction.type << " " << decidedAction.parameter << endl;
     decisionStats->decisionTier = 1.8;
   }
   else{
+    cout << "forr decision " << endl;
     if(highwayFinished < 3){
       highwayFinished++;
     }
@@ -1170,12 +1174,16 @@ FORRAction Controller::decide() {
     decidedAction = FORRDecision();
   }
   //// RCLCPP_DEBUG(this->get_logger(), "After decision made");
+  cout << "Decided Action: " << decidedAction.type << " " << decidedAction.parameter << endl;
   beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
   //// RCLCPP_DEBUG(this->get_logger(), "After incrementDecisionCount");
+  cout << "Decision Count: " << beliefs->getAgentState()->getCurrentTask()->getDecisionCount() << endl;
   beliefs->getAgentState()->getCurrentTask()->saveDecision(decidedAction);
   //// RCLCPP_DEBUG(this->get_logger(), "After saveDecision");
+  cout << "Clearing vetoed actions" << endl;
   beliefs->getAgentState()->clearVetoedActions();
   //// RCLCPP_DEBUG(this->get_logger(), "After clearVetoedActions");
+  cout << "Exiting decision loop" << endl;
   return decidedAction;
 }
 
@@ -1435,10 +1443,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
 FORRAction Controller::FORRDecision()
 {  
   // RCLCPP_DEBUG(this->get_logger(), "In FORR decision");
+  cout << "In FORR decision" << endl;
   FORRAction *decision = new FORRAction();
+  cout << "Created decision object" << endl;
   // Basic semaFORR three tier decision making architecture 
   if(!tierOneDecision(decision)){
   	// RCLCPP_DEBUG(this->get_logger(), "Decision to be made by t3!!");
+    cout << "Decision to be made by t3!!" << endl;
   	//decision->type = FORWARD;
   	//decision->parameter = 5;
   	tierThreeDecision(decision);
@@ -1459,6 +1470,7 @@ FORRAction Controller::FORRDecision()
   // else{
   //   beliefs->getAgentState()->setRotateMode(false);
   // }
+  cout << "Exiting FORR decision with action: " << decision->type << " " << decision->parameter << endl;
   return *decision;
 }
 
@@ -1473,23 +1485,30 @@ bool Controller::tierOneDecision(FORRAction *decision){
   bool decisionMade = false;
   // // RCLCPP_INFO(this->get_logger(), "Advisor circumnavigate will create subplan");
   // tier1->advisorCircumnavigate(decision);
+  cout << "Tier 1 Decision Making" << endl;
   CartesianPoint current_position = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+  cout << "Inside tier 1 decision. Current Position: " << current_position.get_x() << " " << current_position.get_y() << endl;
   if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.75){
+    cout << "if statement 1 triggered" << endl;
     beliefs->getAgentState()->setGetOutTriggered(false);
   }
   if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.75 or beliefs->getAgentState()->getRepositionCount() >= 20){
+    cout << "if statement 2 triggered" << endl;
     beliefs->getAgentState()->setRepositionTriggered(false);
     beliefs->getAgentState()->setRepositionCount(0);
   }
   if(tier1->advisorVictory(decision)){ 
+    cout << "if statement 3 triggered" << endl;
     // RCLCPP_INFO_STREAM(this->get_logger(), "Advisor Victory has made a decision " << decision->type << " " << decision->parameter);
     // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     decisionStats->decisionTier = 1.1;
     decisionMade = true;
   }
   else{
+    cout << "else statement triggered" << endl;
     // RCLCPP_INFO(this->get_logger(), "Advisor AvoidObstacles will veto actions");
     tier1->advisorAvoidObstacles();
+    cout << "Advisor AvoidObstacles vetoed actions" << endl;
     vector<FORRAction> AOVetoedActions;
     set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
     set<FORRAction>::iterator it;
@@ -1498,6 +1517,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     }
     // RCLCPP_INFO(this->get_logger(), "Advisor NotOpposite will veto actions");
     tier1->advisorNotOpposite();
+    cout << "Advisor NotOpposite vetoed actions" << endl;
     vector<FORRAction> NOVetoedActions;
     vetoedActions = beliefs->getAgentState()->getVetoedActions();
     for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
@@ -1505,7 +1525,8 @@ bool Controller::tierOneDecision(FORRAction *decision){
         NOVetoedActions.push_back(*it);
       }
     }
-    if(tier1->advisorEnforcer(decision)){ 
+    if(tier1->advisorEnforcer(decision)){  // running advisorEnforcer will print PlannerName and PlanSize
+      cout << "if statement 1 inside else statement triggered" << endl;
       // RCLCPP_INFO_STREAM(this->get_logger(), "Advisor Enforcer has made a decision " << decision->type << " " << decision->parameter);
       // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
       if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "skeleton" or beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "hallwayskel"){

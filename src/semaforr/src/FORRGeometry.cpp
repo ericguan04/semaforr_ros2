@@ -37,7 +37,7 @@ double CartesianPoint::get_x() const { return x; }
 
 double CartesianPoint::get_y() const { return y; }
 
-double CartesianPoint::get_distance(CartesianPoint point){
+double CartesianPoint::get_distance(CartesianPoint point) const{
 	
 	return sqrt((x - point.x)*(x - point.x) + (y - point.y)*(y - point.y));
 }

@@ -577,7 +577,7 @@ class Task {
 			isPlanComplete = false;
 		}
 		pathCostInNavGraph = planner->getPathCost();
-		pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
+		// pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
 	}
 	else if(plannerName == "hallwayskel"){
 		// origNavGraph = planner->getOrigGraph();

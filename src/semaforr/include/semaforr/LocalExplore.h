@@ -46,7 +46,7 @@ struct PotentialPoints{
 	void printDetails(){
 		cout << "start " << start.get_x() << " " << start.get_y() << " end " << end.get_x() << " " << end.get_y() << " dist_to_goal " << dist_to_goal << " start_dist_to_goal " << start_dist_to_goal << " end_dist_to_goal " << end_dist_to_goal << endl;
 	}
-	bool operator==(const PotentialPoints p) {
+	bool operator==(const PotentialPoints& p) const{
 		if((start == p.start and end == p.end) or end.get_distance(p.end) < 0.75){
 			return true;
 		}
@@ -54,7 +54,7 @@ struct PotentialPoints{
 			return false;
 		}
 	}
-	bool operator < (const PotentialPoints p) const{
+	bool operator < (const PotentialPoints& p) const{
 		if(dist_to_goal < 3.5 and p.dist_to_goal < 3.5){
 			if(index < p.index){
 				return false;
@@ -95,7 +95,7 @@ struct PotentialPoints{
 		// 	}
 		// }
 	}
-	bool operator > (const PotentialPoints p) const{
+	bool operator > (const PotentialPoints& p) const{
 		if(dist_to_goal < 3.5 and p.dist_to_goal < 3.5){
 			if(index < p.index){
 				return true;
@@ -156,23 +156,31 @@ public:
 	bool getStartedRandom() { return started_random; }
 	bool getAtStartOfPotential() { return start_of_potential; }
 	bool getFinishedPotentials() {
-		// cout << "potential_queue " << potential_queue.size() << endl;
+		cout << "potential_queue " << potential_queue.size() << endl;
 		if(potential_queue.size() > 0){
 			bool picked_new = false;
 			int count = potential_queue.size()-1;
-			// cout << "count " << count << endl;
+			cout << "count " << count << endl;
 			while(!picked_new and count > 0){
+				cout << "inside while loop" << endl;
+				if(potential_queue.empty()){
+					cout << "potential queue empty" << endl;
+				}
+				else {
+					cout << "potential queue not empty" << endl;
+				}
 				current_potential = potential_queue.top();
+				cout << "current_potential ";
 				if(!alreadyInStack(current_potential)){
 					picked_new = true;
 				}
 				potential_exploration.push_back(current_potential);
 				potential_queue.pop();
 				count = count - 1;
-				// cout << "potential_queue " << potential_queue.size() << " count " << count << " picked_new " << picked_new << endl;
+				cout << "potential_queue " << potential_queue.size() << " count " << count << " picked_new " << picked_new << endl;
 			}
 			if(picked_new == true){
-				// cout << "current_potential ";
+				cout << "current_potential ";
 				// current_potential.printDetails();
 				// potential_queue.pop();
 				finished_potentials = false;

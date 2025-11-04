@@ -69,7 +69,7 @@ class CartesianPoint{
   void set_y(double new_y);
   double get_x() const;
   double get_y() const;
-  double get_distance(CartesianPoint point);
+  double get_distance(CartesianPoint point) const;
 
 
   /********************************************************************
