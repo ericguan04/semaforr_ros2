@@ -331,6 +331,12 @@ ros2 run social_context human_3d_lidar_fusion_node
 ros2 topic echo /human_poses_3d
 ```
 
+You can also teleop the robot with 
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
 ### Key Topics in HuNav Integration
 
 | Topic | Type | Description |
