@@ -96,22 +96,22 @@ class CoordinateListener(Node):
         for agent_id, coords in predictions.items():
             self.social_context_model[agent_id]["predictions"] = coords
 
-            for coord in coords:
+            for i, coord in enumerate(coords):
                 # Publish each prediction as a PoseStamped message
-                self.publish_pose_stamped(agent_id, coord)
+                self.publish_pose_stamped(agent_id, coord, i)
 
-    def publish_pose_stamped(self, agent_id, coord):
+    def publish_pose_stamped(self, agent_id, coord, step_index):
         # Convert the predicted coordinates to a PoseStamped message and publish
         # Change this to anything else if you want to publish something else
         pose_msg = PoseStamped()
-        pose_msg.header.frame_id = str(agent_id)
+        pose_msg.header.frame_id = f"{agent_id}_pred_{step_index}"
         pose_msg.header.stamp = self.get_clock().now().to_msg()
         pose_msg.pose.position.x = coord[0]
         pose_msg.pose.position.y = coord[1]
         pose_msg.pose.position.z = 0.0
 
         self.pose_publisher.publish(pose_msg)
-        self.get_logger().info(f"Published prediction for agent {agent_id}")
+        self.get_logger().info(f"Published prediction for agent {agent_id}, step {step_index}")
 
 
 def main(args=None):
