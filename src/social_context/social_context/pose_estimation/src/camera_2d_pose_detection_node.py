@@ -38,6 +38,7 @@ class Camera2DPoseDetectionNode(Node):
 
         self.detector = detector
 
+
         # Parameters
         self.declare_parameter('camera_frame_id', 'rgb_camera_optical_frame')
         self.camera_frame_id = self.get_parameter('camera_frame_id').value
@@ -111,14 +112,23 @@ class Camera2DPoseDetectionNode(Node):
 
 def main_mediapipe(args=None):
     """Launch node with MediaPipe detector."""
+    import os
     from social_context.pose_estimation.src.pose_detectors.mediapipe_pose_detector import MediaPipePoseDetector
 
     rclpy.init(args=args)
 
+    model_asset_path = os.environ.get('MEDIAPIPE_POSE_MODEL_PATH', '')
+    if not model_asset_path:
+        raise RuntimeError(
+            "MEDIAPIPE_POSE_MODEL_PATH not set! Set it to the path of a "
+            "downloaded pose_landmarker .task model bundle."
+        )
+
     detector = MediaPipePoseDetector(
+        model_asset_path=model_asset_path,
+        num_poses=5,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
-        model_complexity=1  # 0=Lite, 1=Full, 2=Heavy
     )
 
     node = Camera2DPoseDetectionNode(detector)

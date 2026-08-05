@@ -2,11 +2,11 @@ from trajectory_prediction.pipeline import pipeline
 
 social_context_model = {
     'A': {
-        'history': [(1.0, 2.0), (1.1, 2.1), (1.2, 2.2)],
+        'history': [(1.0, 2.0), (1.1, 2.1), (1.2, 2.2), (1.3, 2.3), (1.4, 2.4)],
         'predictions': []
     },
     'B': {
-        'history': [(2.5, 3.5), (2.6, 3.6), (2.7, 3.7)],
+        'history': [(2.5, 3.5), (2.6, 3.6), (2.7, 3.7), (2.8, 3.8), (2.9, 3.9)],
         'predictions': []
     }
 }
@@ -50,7 +50,7 @@ print(raw_data)
 # print()
 # print(raw_data)
 
-traj_preds = pipeline(raw_data, 3, 3)
+traj_preds = pipeline(raw_data, 5, 5)
 
 # print(traj_preds)
 

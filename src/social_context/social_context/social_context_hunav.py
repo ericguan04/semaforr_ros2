@@ -5,9 +5,10 @@ from hunav_msgs.msg import Agents
 from collections import deque
 import time
 
-import sys
-sys.path.append('/root/semaforr_ros2/src/social_context/social_context')
-from trajectory_prediction.pipeline import pipeline
+# import sys
+# sys.path.append('/root/semaforr_ros2/src/social_context/social_context')
+# from trajectory_prediction.pipeline import pipeline
+from .trajectory_prediction.pipeline import pipeline
 
 # Specifically for HunNavSim - this is for testing the social context model
 # Directly uses hunav_msgs/Agents message for human poses
@@ -20,8 +21,11 @@ class CoordinateListener(Node):
         self._read_interval = 5.0
         self._last_read_time = 0.0
 
-        # Number of time steps before making a prediction
-        self._prediction_steps = 3        
+        # Number of time steps before making a prediction. Must match this
+        # checkpoint's trained config (obs_seq_len=5, pred_seq_len=5 -- see
+        # gst_updated/.../checkpoint/args.pickle); utils.py's predict()
+        # validates this and raises if it doesn't match.
+        self._prediction_steps = 5
 
         # Subscribe to /human_states
         self.human_states_subscriber = self.create_subscription(

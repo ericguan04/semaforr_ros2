@@ -132,8 +132,16 @@ def predict(obs_seq_len,
     # args_path = '/Users/ericguan/Documents/CrowdNav_Prediction_AttnGraph/gst_updated/results/100-gumbel_social_transformer-faster_lstm-lr_0.001-init_temp_0.5-edge_head_0-ebd_64-snl_1-snh_8-seed_1000/sj/checkpoint/args.pickle'
     with open(args_path, 'rb') as f:
         args = pickle.load(f)
-    args.obs_seq_len = 3
-    args.pred_seq_len = 3
+    # This checkpoint was trained with a specific obs/pred_seq_len (see
+    # args.pickle) -- silently overriding it here would feed the model
+    # sequences it was never trained on. Fail loudly instead so callers pass
+    # the length this checkpoint actually expects.
+    if obs_seq_len != args.obs_seq_len or pred_seq_len != args.pred_seq_len:
+        raise ValueError(
+            f"Requested obs_seq_len={obs_seq_len}, pred_seq_len={pred_seq_len} "
+            f"do not match this checkpoint's trained config "
+            f"(obs_seq_len={args.obs_seq_len}, pred_seq_len={args.pred_seq_len})."
+        )
     print(args)
     model = CrowdNavPredInterfaceMultiEnv(load_path=load_path,
                                             device=device, config = args, num_env=n_env)

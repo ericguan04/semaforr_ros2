@@ -3,7 +3,7 @@ import os
 import numpy as np
 import math
 import torch
-from src.mgnn.utils import seq_to_graph
+from .utils import seq_to_graph
 import ndjson
 
 class TrajectoriesDataset(Dataset):

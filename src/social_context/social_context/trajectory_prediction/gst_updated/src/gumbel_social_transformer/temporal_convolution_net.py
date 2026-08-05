@@ -1,5 +1,5 @@
 import torch.nn as nn
-from gst_updated.src.gumbel_social_transformer.utils import _get_clones, _get_activation_fn
+from .utils import _get_clones, _get_activation_fn
 
 class TemporalConvolutionNet(nn.Module):
     def __init__(

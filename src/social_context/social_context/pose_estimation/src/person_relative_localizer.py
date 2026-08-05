@@ -6,13 +6,13 @@ import math
 import numpy as np
 from rclpy.node import Node
 from rclpy.time import Time
-from geometry_msgs.msg import PoseArray, Pose, PointStamped, TransformStamped
+from geometry_msgs.msg import PoseArray, PointStamped, TransformStamped
 from sensor_msgs.msg import LaserScan, CameraInfo
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 import tf2_ros
 from tf2_ros import TransformException
 import tf2_geometry_msgs
-
+from social_context_msgs.msg import LocalizedPerson, LocalizedPersonArray
 
 class PersonRelativeLocalizer(Node):
     """Estimates relative positions of people in the robot's local coordinate frame
@@ -62,7 +62,7 @@ class PersonRelativeLocalizer(Node):
         self.tf_timeout = self.get_parameter('tf_timeout').value
 
         self.pose_3d_pub = self.create_publisher(
-            PoseArray,
+            LocalizedPersonArray,
             PERSON_RELATIVE_LOCALIZER_OUTPUT_TOPIC,
             10
         )
@@ -193,7 +193,7 @@ class PersonRelativeLocalizer(Node):
             return
 
         try:
-            poses_3d = PoseArray()
+            poses_3d = LocalizedPersonArray()
             poses_3d.header = lidar_msg.header
             poses_3d.header.frame_id = self.output_frame
 
@@ -235,19 +235,21 @@ class PersonRelativeLocalizer(Node):
                     self.get_logger().debug(f'Person {i} failed validation checks')
                     continue
 
-                pose_3d = self.create_3d_pose_in_lidar_frame(lidar_angle, lidar_range)
+                person_3d = self.create_3d_pose_in_lidar_frame(lidar_angle, lidar_range, pixel_x, pixel_y)
 
-                if pose_3d is not None:
-                    poses_3d.poses.append(pose_3d)
+                if person_3d is not None:
+                    person_3d.confidence = confidence  # Store confidence in z for tracking
+                    poses_3d.people.append(person_3d)
                     self.get_logger().info(
-                        f'  ✓ Localized at ({pose_3d.position.x:.2f}, {pose_3d.position.y:.2f})m, '
+                        f'  ✓ Localized at ({person_3d.x:.2f}, {person_3d.y:.2f})m, '
                         f'range={lidar_range:.2f}m, angle={math.degrees(lidar_angle):.1f}°'
+                        f' (confidence={confidence:.3f})'
                     )
 
             self.pose_3d_pub.publish(poses_3d)
 
-            if len(poses_3d.poses) > 0:
-                self.get_logger().info(f'Published {len(poses_3d.poses)} 3D person positions')
+            if len(poses_3d.people) > 0:
+                self.get_logger().info(f'Published {len(poses_3d.people)} 3D person positions')
 
         except Exception as e:
             self.get_logger().error(f'Error in synchronized callback: {str(e)}')
@@ -318,13 +320,15 @@ class PersonRelativeLocalizer(Node):
         # Require at least 2 consistent rays
         return consistent_count >= 2
 
-    def create_3d_pose_in_lidar_frame(self, angle: float, distance: float) -> Pose:
+    def create_3d_pose_in_lidar_frame(self, angle: float, distance: float, pixel_x: float, pixel_y: float) -> LocalizedPerson:
         """
         Create 3D pose from angles and distance.
 
         Args:
             angle: Angle in LiDAR frame
             distance: Range measurement
+            pixel_x: Pixel x-coordinate in camera image
+            pixel_y: Pixel y-coordinate in camera image
 
         Returns:
             3D pose in robot frame
@@ -335,21 +339,23 @@ class PersonRelativeLocalizer(Node):
             y = distance * math.sin(angle)
             z = 0.0 # Assume ground level
 
-            pose_3d = Pose()
-            pose_3d.position.x = float(x)
-            pose_3d.position.y = float(y)
-            pose_3d.position.z = float(z)
+            person = LocalizedPerson()
+            person.x = float(x)
+            person.y = float(y)
+            person.z = float(z)
+            person.pixel_x = float(pixel_x)
+            person.pixel_y = float(pixel_y)
 
             # Orientation: face towards robot
             yaw = math.atan2(-y, -x)  # Opposite direction = facing robot
 
             # Convert yaw to quaternion (only rotating around z-axis)
-            pose_3d.orientation.x = 0.0
-            pose_3d.orientation.y = 0.0
-            pose_3d.orientation.z = math.sin(yaw / 2.0)
-            pose_3d.orientation.w = math.cos(yaw / 2.0)
+            person.orientation_x = 0.0
+            person.orientation_y = 0.0
+            person.orientation_z = float(math.sin(yaw / 2.0))
+            person.orientation_w = float(math.cos(yaw / 2.0))
 
-            return pose_3d
+            return person
 
         except Exception as e:
             self.get_logger().error(f'Error computing local person position: {str(e)}')

@@ -11,9 +11,9 @@ import sys
 # Resolve Pathing Issues
 # from src.social_transformer.social_transformer import SpatialSocialTransformerEncoder
 #sys.path.append('/Users/ericguan/Documents/semaforr_ros2/social_context/social_context/trajectory_prediction')
-sys.path.insert(0, '/root/semaforr_ros2/src/social_context/social_context/trajectory_prediction')
-from gst_updated.src.gumbel_social_transformer.gumbel_social_transformer import GumbelSocialTransformer
-from gst_updated.src.gumbel_social_transformer.temporal_convolution_net import TemporalConvolutionNet
+# sys.path.insert(0, '/root/semaforr_ros2/src/social_context/social_context/trajectory_prediction')
+from .gumbel_social_transformer import GumbelSocialTransformer
+from .temporal_convolution_net import TemporalConvolutionNet
 
 
 def offset_error_square_full_partial(x_pred, x_target, loss_mask_ped, loss_mask_pred_seq):

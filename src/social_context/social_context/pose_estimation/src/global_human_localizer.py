@@ -5,17 +5,18 @@ Global Human Localizer Node
 Transforms human positions from robot-relative coordinates (local)
 to global map coordinates using TF transforms.
 
-Input:  /human_poses_3d (PoseArray in robot frame)
-Output: /human_poses_global (PoseArray in map frame)
+Input:  /human_poses_3d (LocalizedPersonArray in robot frame)
+Output: /human_poses_global (LocalizedPersonArray in map frame)
 """
 
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
-from geometry_msgs.msg import PoseArray, PoseStamped
+from geometry_msgs.msg import PoseStamped
 import tf2_ros
 from tf2_ros import TransformException
 import tf2_geometry_msgs
+from social_context_msgs.msg import LocalizedPersonArray, LocalizedPerson
 
 class GlobalHumanLocalizer(Node):
     """
@@ -45,8 +46,8 @@ class GlobalHumanLocalizer(Node):
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
-        self.global_pose_pub = self.create_publisher(PoseArray, global_topic, 10)
-        self.local_poses_sub = self.create_subscription(PoseArray, local_topic, self.local_poses_callback, 10)
+        self.global_pose_pub = self.create_publisher(LocalizedPersonArray, global_topic, 10)
+        self.local_poses_sub = self.create_subscription(LocalizedPersonArray, local_topic, self.local_poses_callback, 10)
 
         self.last_publish_time = self.get_clock().now()
         self.min_publish_interval = 1.0 / self.publish_rate_limit
@@ -62,7 +63,7 @@ class GlobalHumanLocalizer(Node):
         self.get_logger().info(f'  Publishing to: {global_topic}')
         self.get_logger().info('=' * 60)
 
-    def local_poses_callback(self, msg: PoseArray):
+    def local_poses_callback(self, msg: LocalizedPersonArray):
         """
         Callback for local pose detections.
         Transforms each pose from robot frame to map frame.
@@ -74,7 +75,7 @@ class GlobalHumanLocalizer(Node):
         if time_since_last_publish < self.min_publish_interval:
             return  # Skip this message to avoid overwhelming the system
 
-        if len(msg.poses) == 0:
+        if len(msg.people) == 0:
             return
 
         try:
@@ -84,8 +85,8 @@ class GlobalHumanLocalizer(Node):
                 transform = self.tf_buffer.lookup_transform(
                     self.map_frame,
                     self.robot_frame,
-                    # rclpy.time.Time(),
-                    timestamp,
+                    rclpy.time.Time(),
+                    #timestamp,
                     timeout=rclpy.duration.Duration(seconds=self.tf_timeout)
                 )
             except TransformException as ex:
@@ -96,29 +97,56 @@ class GlobalHumanLocalizer(Node):
                 self.transform_fail_count += 1
                 return
 
-            global_poses = PoseArray()
+            global_poses = LocalizedPersonArray()
             global_poses.header.stamp = msg.header.stamp
             global_poses.header.frame_id = self.map_frame
 
-            for local_pose in msg.poses:
+            for local_person in msg.people:
+                confidence_level = local_person.confidence  
+                ori_x = local_person.orientation_x
+                ori_y = local_person.orientation_y
+                ori_z = local_person.orientation_z
+                ori_w = local_person.orientation_w
+                pixel_x = local_person.pixel_x
+                pixel_y = local_person.pixel_y
+
                 pose_stamped = PoseStamped()
                 pose_stamped.header.stamp = msg.header.stamp
                 pose_stamped.header.frame_id = self.robot_frame
-                pose_stamped.pose = local_pose
+                pose_stamped.pose.position.x = local_person.x
+                pose_stamped.pose.position.y = local_person.y
+                pose_stamped.pose.position.z = local_person.z
+                pose_stamped.pose.orientation.x = ori_x
+                pose_stamped.pose.orientation.y = ori_y
+                pose_stamped.pose.orientation.z = ori_z
+                pose_stamped.pose.orientation.w = ori_w
 
                 global_pose_stamped = tf2_geometry_msgs.do_transform_pose_stamped(
                     pose_stamped,
                     transform
                 )
 
-                global_poses.poses.append(global_pose_stamped.pose)
+                global_person = LocalizedPerson()
+                global_person.x = global_pose_stamped.pose.position.x
+                global_person.y = global_pose_stamped.pose.position.y
+                global_person.z = global_pose_stamped.pose.position.z
+                global_person.confidence = confidence_level
+                global_person.orientation_x = ori_x
+                global_person.orientation_y = ori_y
+                global_person.orientation_z = ori_z
+                global_person.orientation_w = ori_w
+                global_person.pixel_x = pixel_x
+                global_person.pixel_y = pixel_y
+
+
+                global_poses.people.append(global_person)
 
             self.global_pose_pub.publish(global_poses)
             self.last_publish_time = current_time
             self.transform_success_count += 1
 
             self.get_logger().debug(
-                f'Transformed {len(global_poses.poses)} person(s) to global frame'
+                f'Transformed {len(global_poses.people)} person(s) to global frame'
             )
 
             # Log statistics periodically

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from gst_updated.src.gumbel_social_transformer.utils import _get_clones
+from .utils import _get_clones
 
 class GumbelSocialTransformer(nn.Module):
     def __init__(self, d_motion, d_model, nhead_nodes, nhead_edges, nlayer, dim_feedforward=512, dim_hidden=32, \
@@ -10,12 +10,12 @@ class GumbelSocialTransformer(nn.Module):
             if nhead_edges == 0:
                 raise RuntimeError("Full connectivity conflicts with the Ghost setting.")
             print("Ghost version.")
-            from gst_updated.src.gumbel_social_transformer.edge_selector_ghost import EdgeSelector
-            from gst_updated.src.gumbel_social_transformer.node_encoder_layer_ghost import NodeEncoderLayer
+            from .edge_selector_ghost import EdgeSelector
+            from .node_encoder_layer_ghost import NodeEncoderLayer
         else:
             print("No ghost version.")
-            from gst_updated.src.gumbel_social_transformer.edge_selector_no_ghost import EdgeSelector
-            from gst_updated.src.gumbel_social_transformer.node_encoder_layer_no_ghost import NodeEncoderLayer
+            from .edge_selector_no_ghost import EdgeSelector
+            from .node_encoder_layer_no_ghost import NodeEncoderLayer
         if nhead_edges != 0:
             # 0 means it is fully connected
             self.edge_selector = EdgeSelector(

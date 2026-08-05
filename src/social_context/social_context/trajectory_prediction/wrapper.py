@@ -60,7 +60,7 @@ class CrowdNavPredInterfaceMultiEnv(object):
         checkpoint_dir = join(load_path, 'checkpoint')
         self.model = st_model(self.args_eval, device=device).to(device)
         model_filename = 'epoch_'+str(self.args_eval.num_epochs)+'.pt'
-        model_checkpoint = torch.load(join(checkpoint_dir, model_filename), map_location=device)
+        model_checkpoint = torch.load(join(checkpoint_dir, model_filename), map_location=device, weights_only=False)
         self.model.load_state_dict(model_checkpoint['model_state_dict'])
         self.model.eval()
         print("LOADED MODEL")

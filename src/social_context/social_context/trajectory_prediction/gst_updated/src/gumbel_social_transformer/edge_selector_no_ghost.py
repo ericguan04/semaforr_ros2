@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.functional import softmax
-from gst_updated.src.gumbel_social_transformer.mha import VanillaMultiheadAttention
-from gst_updated.src.gumbel_social_transformer.utils import _get_activation_fn, gumbel_softmax
+from .mha import VanillaMultiheadAttention
+from .utils import _get_activation_fn, gumbel_softmax
 
 
 class EdgeSelector(nn.Module):

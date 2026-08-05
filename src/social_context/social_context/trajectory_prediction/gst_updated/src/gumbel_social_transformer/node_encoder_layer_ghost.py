@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from src.gumbel_social_transformer.mha import VanillaMultiheadAttention
-from src.gumbel_social_transformer.utils import _get_activation_fn
+from .mha import VanillaMultiheadAttention
+from .utils import _get_activation_fn
 
 class NodeEncoderLayer(nn.Module):
     r"""Ghost version"""
